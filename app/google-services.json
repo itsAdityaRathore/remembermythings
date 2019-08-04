@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "427243387157",
+    "firebase_url": "https://remembermythings-b4a54.firebaseio.com",
+    "project_id": "remembermythings-b4a54",
+    "storage_bucket": "remembermythings-b4a54.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:427243387157:android:498d9820a5c45552",
+        "android_client_info": {
+          "package_name": "com.aditya.remembermythings"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "427243387157-93dt1o3hhmcq46t07rcrnu9k29rvns90.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2cywcd5GlmPoVFuIUocD2hVnrEjyUH-8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "427243387157-93dt1o3hhmcq46t07rcrnu9k29rvns90.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
