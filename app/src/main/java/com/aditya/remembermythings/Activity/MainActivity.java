@@ -4,22 +4,25 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.StrictMode;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.GridLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.AppCompatEditText;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.cardview.widget.CardView;
-import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.aditya.remembermythings.Common.Common;
 import com.aditya.remembermythings.Model.Items;
@@ -37,7 +40,10 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.util.UUID;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import io.paperdb.Paper;
 
@@ -45,12 +51,13 @@ import io.paperdb.Paper;
 public class MainActivity extends AppCompatActivity {
 
     GridLayout mainGrid;
-    TextView category;
+    String uPhone;
 
     Items newItem;
 
     //Add new menu Layout
     AppCompatEditText edtName;
+    AppCompatImageView edtImage;
     AppCompatButton btnUpload,btnSelect;
 
     //Firebase
@@ -58,22 +65,26 @@ public class MainActivity extends AppCompatActivity {
     DatabaseReference items,userItem;
     FirebaseStorage storage;
     StorageReference storageReference;
-   // FirebaseRecyclerAdapter<Items,MenuViewHolder> adapter;
 
-
-
-    Uri saveUri;
-    DrawerLayout drawer;
+    Uri picUri;
+    private static final int CAPTURE_IMAGE = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
+
+        if (getIntent().hasExtra("uPhone")){
+            uPhone = getIntent().getStringExtra("uPhone");
+            Toast.makeText(this, "User = "+uPhone, Toast.LENGTH_SHORT).show();
+        }
 
         //Init Firebase
         database = FirebaseDatabase.getInstance();
         items = database.getReference("Items");
-        userItem = items.child(User.class.getName());
+        userItem = items.child(""+uPhone);
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
 
@@ -82,11 +93,8 @@ public class MainActivity extends AppCompatActivity {
         setSingleEvent(mainGrid);
         //setToggleEvent(mainGrid);
 
-//       Intent intent = new Intent(this, LoginActivity.class);
-//       startActivity(intent);
         //INIT paper
         Paper.init(this);
-
     }
 
     private void login(String phone, String pwd) {
@@ -194,8 +202,8 @@ public class MainActivity extends AppCompatActivity {
         View add_item_layout = inflater.inflate(R.layout.add_new_item,null);
 
         edtName = add_item_layout.findViewById(R.id.edtName);
+        edtImage = add_item_layout.findViewById(R.id.edtImage);
         btnSelect = add_item_layout.findViewById(R.id.btnSelect);
-        btnUpload = add_item_layout.findViewById(R.id.btnUpload);
 
         ////Event for button
         btnSelect.setOnClickListener(new View.OnClickListener() {
@@ -205,12 +213,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnUpload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                uploadImage();
-            }
-        });
+//        btnUpload.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//               // uploadImage();
+//            }
+//        });
 
         alertDialog.setView(add_item_layout);
         //alertDialog.setIcon(R.drawable.ic_shopping_cart_black_24dp);
@@ -221,13 +229,23 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
 
-                //we create new category
-                if(newItem != null)
-                {
-                    userItem.push().setValue(newItem);
-                    //Snackbar.make(drawer,"New Item "+newItem.getName()+" was added",Snackbar.LENGTH_SHORT).show();
-                    Toast.makeText(MainActivity.this, "New Item "+newItem.getName()+" was added", Toast.LENGTH_SHORT).show();
+                String name = edtName.getText().toString();
+                if(!name.isEmpty()){
+                    uploadImage();
+//                    //we create new category
+//                    if(newItem != null)
+//                    {
+//                        userItem.push().setValue(newItem);
+//                        // Snackbar.make(drawer,"New Item "+newItem.getName()+" was added",Snackbar.LENGTH_SHORT).show();
+//                        Toast.makeText(MainActivity.this, "New Item "+newItem.getName()+" was added", Toast.LENGTH_SHORT).show();
+//                    }else{
+//                        Toast.makeText(MainActivity.this, "Empty..!!!", Toast.LENGTH_SHORT).show();
+//                    }
                 }
+                else{
+                    Toast.makeText(MainActivity.this, "Name cannot be Empty..!!!", Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
         alertDialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
@@ -241,14 +259,62 @@ public class MainActivity extends AppCompatActivity {
 
     private void chooseImage() {
 
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(intent.createChooser(intent,"Select Image"),Common.PICK_IMAGE_REQUEST);
+        Intent i = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+
+        File file = getOutputMediaFile(1);
+        picUri = Uri.fromFile(file); // create
+        i.putExtra(MediaStore.EXTRA_OUTPUT,picUri); // set the image file
+
+        startActivityForResult(i, CAPTURE_IMAGE);
 
     }
 
     @Override
+    protected  void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode,resultCode,data);
+
+        Uri uri = picUri;
+        Bitmap imageBitmap=null;
+
+        try {
+            imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), picUri);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if(imageBitmap!=null) {
+            btnSelect.setText("Image Selected");
+            edtImage.setImageBitmap(imageBitmap);
+        }
+
+    }
+
+    /** Create a File for saving an image */
+    private File getOutputMediaFile(int type){
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), "CameraApp");
+
+        /**Create the storage directory if it does not exist*/
+        if (! mediaStorageDir.exists()){
+            if (! mediaStorageDir.mkdirs()){
+                return null;
+            }
+        }
+
+        /**Create a media file name*/
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        File mediaFile;
+        if (type == 1){
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                    "IMG_"+ timeStamp + ".png");
+        } else {
+            return null;
+        }
+        return mediaFile;
+    }
+
+
+
+   /* @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -258,18 +324,19 @@ public class MainActivity extends AppCompatActivity {
             btnSelect.setText("Image Selected");
         }
     }
-
+*/
     private void uploadImage() {
-        Toast.makeText(this, "Im in Upload", Toast.LENGTH_SHORT).show();
-        if(saveUri != null)
+        //Toast.makeText(this, "Im in Upload", Toast.LENGTH_SHORT).show();
+        if(picUri != null)
         {
             final ProgressDialog mDialog = new ProgressDialog(this);
             mDialog.setMessage("Uploading...");
             mDialog.show();
-
-            String imageName = UUID.randomUUID().toString();
-            final StorageReference imageFolder = storageReference.child("images/"+imageName);
-            imageFolder.putFile(saveUri)
+            Uri uri = picUri;
+            //String imageName = UUID.randomUUID().toString();
+            //final StorageReference imageFolder = storageReference.child("images/"+imageName);
+            final StorageReference imageFolder = storageReference.child("images/").child(uri.getLastPathSegment());
+            imageFolder.putFile(picUri)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -280,6 +347,15 @@ public class MainActivity extends AppCompatActivity {
                                 public void onSuccess(Uri uri) {
                                     // set value for newCategory and we can get download link
                                     newItem = new Items(edtName.getText().toString(),uri.toString());
+                                    //we create new category
+                                    if(newItem != null)
+                                    {
+                                        userItem.push().setValue(newItem);
+                                        // Snackbar.make(drawer,"New Item "+newItem.getName()+" was added",Snackbar.LENGTH_SHORT).show();
+                                        Toast.makeText(MainActivity.this, "New Item "+newItem.getName()+" was added", Toast.LENGTH_SHORT).show();
+                                    }else{
+                                        Toast.makeText(MainActivity.this, "Empty..!!!", Toast.LENGTH_SHORT).show();
+                                    }
                                 }
                             });
                         }
@@ -294,10 +370,13 @@ public class MainActivity extends AppCompatActivity {
                     .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                            int progress = (100 * (int)taskSnapshot.getBytesTransferred() / (int)taskSnapshot.getTotalByteCount());
                             mDialog.setMessage("Uploaded "+progress+" %");
                         }
                     });
+        }
+        else{
+            Toast.makeText(this, "Please Click the image first..!!!", Toast.LENGTH_LONG).show();
         }
 
     }

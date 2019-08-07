@@ -15,7 +15,7 @@
 
         <androidx.appcompat.widget.AppCompatEditText
             android:id="@+id/edtName"
-            android:hint="Name"
+            android:hint="Item name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColorHint="@color/white"
@@ -29,28 +29,37 @@
             app:met_singleLineEllipsis="true"
             />
 
+
         <LinearLayout
             android:weightSum="2"
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/edtImage"
+                android:layout_gravity="center_horizontal|left"
+                android:layout_height="80dp"
+                android:layout_width="160dp"/>
+
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnSelect"
-                android:text="SELECT"
+                android:text="Click Picture"
+                android:layout_gravity="center_horizontal|center_vertical"
                 android:textColor="@android:color/white"
+                android:textAlignment="center"
                 android:layout_weight="1"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:layout_marginRight="8dp"
-                android:layout_marginLeft="8dp"
+                android:layout_margin="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginLeft="5dp"
                 android:layout_alignParentBottom="true"
                 app:buttonColor="@color/primary_dark"
                 app:shadowColor="@android:color/black"
                 app:shadowEnabled="true"
-                app:shadowHeight="4dp"
-                app:cornerRadius="4dp"/>
+                app:shadowHeight="5dp"
+                app:cornerRadius="10dp"/>
 
 
             <!--   <info.hoang8f.widget.FButton
@@ -72,23 +81,23 @@
                             />-->
 
 
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnUpload"
-                android:text="UPLOAD"
-                android:textColor="@android:color/white"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:layout_marginRight="8dp"
-                android:layout_marginLeft="8dp"
-                android:layout_alignParentBottom="true"
-                app:buttonColor="@color/primary_dark"
-                app:shadowColor="@android:color/black"
-                app:shadowEnabled="true"
-                app:shadowHeight="4dp"
-                app:cornerRadius="4dp"
-                />
+            <!--<androidx.appcompat.widget.AppCompatButton-->
+                <!--android:id="@+id/btnUpload"-->
+                <!--android:text="UPLOAD"-->
+                <!--android:textColor="@android:color/white"-->
+                <!--android:layout_weight="1"-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_margin="8dp"-->
+                <!--android:layout_marginRight="8dp"-->
+                <!--android:layout_marginLeft="8dp"-->
+                <!--android:layout_alignParentBottom="true"-->
+                <!--app:buttonColor="@color/primary_dark"-->
+                <!--app:shadowColor="@android:color/black"-->
+                <!--app:shadowEnabled="true"-->
+                <!--app:shadowHeight="4dp"-->
+                <!--app:cornerRadius="4dp"-->
+                <!--/>-->
 
         </LinearLayout>
 

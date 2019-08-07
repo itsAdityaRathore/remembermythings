@@ -16,6 +16,9 @@ public class Common {
     public static final String DELETE = "Delete";
 
     public static final int PICK_IMAGE_REQUEST = 71;
+    public static final int REQUEST_CAPTURE_IMAGE = 1;
+   // static final int REQUEST_TAKE_PHOTO = 1;
+
 
     public static boolean isConnectedToInternet(Context context)
     {

@@ -108,6 +108,7 @@ public class LoginActivity extends AppCompatActivity {
                         if (user.getuPassword().equals(pwd)) {
 
                             Intent intent = new Intent(getBaseContext(), MainActivity.class);
+                            intent.putExtra("uPhone",phone);
                             startActivity(intent);
                             Common.currentUser = user;
                             finish();
@@ -181,6 +182,7 @@ public class LoginActivity extends AppCompatActivity {
                         if (user.getuPassword().equals(password)) {
 
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            intent.putExtra("uPhone",phone);
                             startActivity(intent);
                             Common.currentUser = user;
                             finish();
