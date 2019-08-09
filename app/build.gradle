@@ -43,6 +43,12 @@ dependencies {
     implementation 'com.google.firebase:firebase-core:17.0.0'
     implementation 'com.google.firebase:firebase-auth:18.1.0'
     implementation 'com.firebaseui:firebase-ui-auth:4.3.1'
+    implementation 'com.firebaseui:firebase-ui-database:1.2.0'
+    implementation 'com.squareup.picasso:picasso:2.71828'
+
+    //image compress
+    implementation 'id.zelory:compressor:2.1.0'
+
 
 //butterknife
     implementation 'com.jakewharton:butterknife:10.1.0'

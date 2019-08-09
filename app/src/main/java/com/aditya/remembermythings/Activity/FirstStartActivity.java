@@ -22,7 +22,7 @@ public class FirstStartActivity extends AppCompatActivity {
         btnGetStarted.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent homeIntent = new Intent(FirstStartActivity.this,MainActivity.class);
+                Intent homeIntent = new Intent(getApplicationContext(),MainActivity.class);
                 startActivity(homeIntent);
             }
         });

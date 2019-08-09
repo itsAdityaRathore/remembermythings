@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <androidx.appcompat.widget.AppCompatEditText
+        <!--<androidx.appcompat.widget.AppCompatEditText
             android:id="@+id/edtName"
             android:hint="Item name"
             android:layout_width="match_parent"
@@ -27,8 +27,19 @@
             app:met_floatingLabel="highlight"
             app:met_primaryColor="@color/white"
             app:met_singleLineEllipsis="true"
-            />
+            />-->
 
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
+            <EditText android:id="@+id/edt_Name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapWords"
+                android:hint="Item name" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
             android:weightSum="2"

@@ -109,16 +109,16 @@ public class SignupActivity extends AppCompatActivity {
                     {
                         User user = new User(name,password);
                         table_user.child(mobile).setValue(user);
+                        user.setuPhone(mobile);
 
                         SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
                         Boolean firstStart = prefs.getBoolean("first_start", true);
-                        if (firstStart) {
-                            firstShow();
-                        } else {
-                            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+
+                            Intent intent = new Intent(getApplicationContext(), FirstStartActivity.class);
+                            Common.currentUser = user;
                             startActivity(intent);
                             Toast.makeText(SignupActivity.this, "Sign Up Successful", Toast.LENGTH_SHORT).show();
-                        }
+
                     }
                 }
 
@@ -148,13 +148,12 @@ public class SignupActivity extends AppCompatActivity {
 
         Intent intent2 = new Intent(getApplicationContext(), FirstStartActivity.class);
         startActivity(intent2);
-        finish();
         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
 
-        SharedPreferences prefs = getSharedPreferences("prefs",MODE_PRIVATE);
+        /*SharedPreferences prefs = getSharedPreferences("prefs",MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean("first_start",false);
-        editor.apply();
+        editor.apply();*/
     }
 
 

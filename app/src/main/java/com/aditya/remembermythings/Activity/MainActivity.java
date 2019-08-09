@@ -14,13 +14,13 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
-import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.cardview.widget.CardView;
 
@@ -40,11 +40,14 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import butterknife.BindView;
+import id.zelory.compressor.Compressor;
 import io.paperdb.Paper;
 
 
@@ -56,7 +59,10 @@ public class MainActivity extends AppCompatActivity {
     Items newItem;
 
     //Add new menu Layout
-    AppCompatEditText edtName;
+    //AppCompatEditText edtName;
+    @BindView(R.id.edt_Name)
+    EditText edtName;
+
     AppCompatImageView edtImage;
     AppCompatButton btnUpload,btnSelect;
 
@@ -66,8 +72,9 @@ public class MainActivity extends AppCompatActivity {
     FirebaseStorage storage;
     StorageReference storageReference;
 
-    Uri picUri;
-    private static final int CAPTURE_IMAGE = 0;
+        File mediaStorageDir;
+        Uri picUri;
+        private static final int CAPTURE_IMAGE = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,13 +85,13 @@ public class MainActivity extends AppCompatActivity {
 
         if (getIntent().hasExtra("uPhone")){
             uPhone = getIntent().getStringExtra("uPhone");
-            Toast.makeText(this, "User = "+uPhone, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "User = "+uPhone, Toast.LENGTH_SHORT).show();
         }
 
         //Init Firebase
         database = FirebaseDatabase.getInstance();
         items = database.getReference("Items");
-        userItem = items.child(""+uPhone);
+        userItem = items.child(Common.currentUser.getuPhone());
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
 
@@ -184,9 +191,13 @@ public class MainActivity extends AppCompatActivity {
                     intent.putExtra("info",""+finalI);
                     startActivity(intent);*/
 
-                    Toast.makeText(MainActivity.this, "Clicked = "+finalI, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MainActivity.this, "Clicked = "+finalI, Toast.LENGTH_SHORT).show();
                     if(finalI == 0){
                         showDialog();
+                    }
+                    else if(finalI == 1){
+                        Intent intent = new Intent(getApplicationContext(),ItemViewActivity.class);
+                        startActivity(intent);
                     }
                 }
             });
@@ -201,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
         LayoutInflater inflater = this.getLayoutInflater();
         View add_item_layout = inflater.inflate(R.layout.add_new_item,null);
 
-        edtName = add_item_layout.findViewById(R.id.edtName);
+        edtName = add_item_layout.findViewById(R.id.edt_Name);
         edtImage = add_item_layout.findViewById(R.id.edtImage);
         btnSelect = add_item_layout.findViewById(R.id.btnSelect);
 
@@ -290,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
 
     /** Create a File for saving an image */
     private File getOutputMediaFile(int type){
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+        mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES), "CameraApp");
 
         /**Create the storage directory if it does not exist*/
@@ -327,58 +338,85 @@ public class MainActivity extends AppCompatActivity {
 */
     private void uploadImage() {
         //Toast.makeText(this, "Im in Upload", Toast.LENGTH_SHORT).show();
-        if(picUri != null)
-        {
+        if(picUri != null) {
             final ProgressDialog mDialog = new ProgressDialog(this);
             mDialog.setMessage("Uploading...");
             mDialog.show();
             Uri uri = picUri;
             //String imageName = UUID.randomUUID().toString();
             //final StorageReference imageFolder = storageReference.child("images/"+imageName);
-            final StorageReference imageFolder = storageReference.child("images/").child(uri.getLastPathSegment());
-            imageFolder.putFile(picUri)
-                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            mDialog.dismiss();
-                            Toast.makeText(MainActivity.this, "Uploaded succesfully", Toast.LENGTH_SHORT).show();
-                            imageFolder.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri uri) {
-                                    // set value for newCategory and we can get download link
-                                    newItem = new Items(edtName.getText().toString(),uri.toString());
-                                    //we create new category
-                                    if(newItem != null)
-                                    {
-                                        userItem.push().setValue(newItem);
-                                        // Snackbar.make(drawer,"New Item "+newItem.getName()+" was added",Snackbar.LENGTH_SHORT).show();
-                                        Toast.makeText(MainActivity.this, "New Item "+newItem.getName()+" was added", Toast.LENGTH_SHORT).show();
-                                    }else{
-                                        Toast.makeText(MainActivity.this, "Empty..!!!", Toast.LENGTH_SHORT).show();
+            //Compress Image before upload
+            File actualImage = new File(uri.getPath());
+
+            try {
+                Bitmap compressedImage = new Compressor(this)
+                        .setMaxWidth(420)
+                        .setMaxHeight(240)
+                        .setQuality(50)
+                        .setCompressFormat(Bitmap.CompressFormat.WEBP)
+                        .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_PICTURES).getAbsolutePath())
+                        .compressToBitmap(actualImage);
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                compressedImage.compress(Bitmap.CompressFormat.JPEG, 50, baos);
+                byte[] final_image = baos.toByteArray();
+
+                Bitmap imageBitmap = null;
+                try {
+                    imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), picUri);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+                final StorageReference imageFolder = storageReference.child("images/").child(uri.getLastPathSegment());
+
+                UploadTask uploadTask = imageFolder.putBytes(final_image);
+
+
+                //imageFolder.putFile(picUri)
+                        uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                mDialog.dismiss();
+                                Toast.makeText(MainActivity.this, "Uploaded succesfully", Toast.LENGTH_SHORT).show();
+                                imageFolder.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                    @Override
+                                    public void onSuccess(Uri uri) {
+                                        // set value for newCategory and we can get download link
+                                        newItem = new Items(edtName.getText().toString(), uri.toString());
+                                        //we create new category
+                                        if (newItem != null) {
+                                            userItem.push().setValue(newItem);
+                                            //Snackbar.make(drawer,"New Item "+newItem.getName()+" was added", Snackbar.LENGTH_SHORT).show();
+                                            Toast.makeText(MainActivity.this, "New Item " + newItem.getName() + " was added", Toast.LENGTH_SHORT).show();
+                                        }
                                     }
-                                }
-                            });
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            mDialog.dismiss();
-                            Toast.makeText(MainActivity.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                            int progress = (100 * (int)taskSnapshot.getBytesTransferred() / (int)taskSnapshot.getTotalByteCount());
-                            mDialog.setMessage("Uploaded "+progress+" %");
-                        }
-                    });
-        }
-        else{
+                                });
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                mDialog.dismiss();
+                                Toast.makeText(MainActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                int progress = (100 * (int) taskSnapshot.getBytesTransferred() / (int) taskSnapshot.getTotalByteCount());
+                                mDialog.setMessage("Uploaded " + progress + " %");
+                            }
+                        });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }   else{
             Toast.makeText(this, "Please Click the image first..!!!", Toast.LENGTH_LONG).show();
         }
-
     }
 
 }
