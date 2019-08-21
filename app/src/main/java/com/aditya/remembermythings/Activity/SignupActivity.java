@@ -77,9 +77,7 @@ public class SignupActivity extends AppCompatActivity {
         if (Common.isConnectedToInternet(getBaseContext())) {
             final ProgressDialog progressDialog = new ProgressDialog(SignupActivity.this,
                     R.style.AppTheme_Dark_Dialog);
-            progressDialog.setIndeterminate(true);
-            progressDialog.setMessage("Creating Account...");
-            progressDialog.show();
+
 
             String name = _nameText.getText().toString();
           //String address = _addressText.getText().toString();
@@ -93,22 +91,27 @@ public class SignupActivity extends AppCompatActivity {
             //Init Firebase
 
             FirebaseDatabase database = FirebaseDatabase.getInstance();
-            final DatabaseReference table_user = database.getReference("Users");
+            final DatabaseReference table_user = database.getReference("Users").child(mobile);
 
-            table_user.addValueEventListener(new ValueEventListener() {
+            table_user.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     //Toast.makeText(SignupActivity.this, "im here", Toast.LENGTH_SHORT).show();
                     //check if user already registerd
-                    if(dataSnapshot.child(mobile).exists())
+                    if(dataSnapshot.exists())
                     {
                         Toast.makeText(SignupActivity.this, "Phone No. Already Registered.!!", Toast.LENGTH_SHORT).show();
                         _signupButton.setEnabled(true);
                     }
                     else
                     {
+
+                        progressDialog.setIndeterminate(true);
+                        progressDialog.setMessage("Creating Account...");
+                        progressDialog.show();
+
                         User user = new User(name,password);
-                        table_user.child(mobile).setValue(user);
+                        table_user.setValue(user);
                         user.setuPhone(mobile);
 
                         SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
@@ -117,7 +120,7 @@ public class SignupActivity extends AppCompatActivity {
                             Intent intent = new Intent(getApplicationContext(), FirstStartActivity.class);
                             Common.currentUser = user;
                             startActivity(intent);
-                            Toast.makeText(SignupActivity.this, "Sign Up Successful", Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(SignupActivity.this, "Sign Up Successful", Toast.LENGTH_SHORT).show();
 
                     }
                 }

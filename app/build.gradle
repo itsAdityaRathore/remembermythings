@@ -48,9 +48,13 @@ dependencies {
 
     //image compress
     implementation 'id.zelory:compressor:2.1.0'
+    //permissions
+    //implementation 'com.github.tbruyelle:rxpermissions:0.10.2'
+    implementation 'com.vanniktech:rxpermission:0.7.0'
+    implementation 'com.vanniktech:rxpermission:0.8.0-SNAPSHOT'
 
 
-//butterknife
+    //butterknife
     implementation 'com.jakewharton:butterknife:10.1.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
 }

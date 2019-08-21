@@ -1,5 +1,6 @@
 package com.aditya.remembermythings.Activity;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -39,6 +40,9 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.vanniktech.rxpermission.Permission;
+import com.vanniktech.rxpermission.RealRxPermission;
+import com.vanniktech.rxpermission.RxPermission;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -49,9 +53,14 @@ import java.util.Date;
 import butterknife.BindView;
 import id.zelory.compressor.Compressor;
 import io.paperdb.Paper;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Consumer;
 
 
 public class MainActivity extends AppCompatActivity {
+
+    RxPermission rxPermission;
+    @NonNull final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     GridLayout mainGrid;
     String uPhone;
@@ -82,6 +91,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
+        rxPermission = RealRxPermission.getInstance(getApplication());
+
+        compositeDisposable.add(rxPermission.requestEach(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .subscribe(new Consumer<Permission>() {
+                    @Override public void accept(final Permission granted) throws Exception {
+                      //  Toast.makeText(MainActivity.this, granted.toString(), Toast.LENGTH_LONG).show();
+                    }
+                }));
 
         if (getIntent().hasExtra("uPhone")){
             uPhone = getIntent().getStringExtra("uPhone");
@@ -102,6 +119,11 @@ public class MainActivity extends AppCompatActivity {
 
         //INIT paper
         Paper.init(this);
+    }
+
+    @Override protected void onDestroy() {
+        compositeDisposable.clear();
+        super.onDestroy();
     }
 
     private void login(String phone, String pwd) {
@@ -177,6 +199,8 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
+
     private void setSingleEvent(GridLayout mainGrid) {
         //Loop all child item of Main Grid
         for (int i = 0; i < mainGrid.getChildCount(); i++) {
@@ -196,8 +220,26 @@ public class MainActivity extends AppCompatActivity {
                         showDialog();
                     }
                     else if(finalI == 1){
-                        Intent intent = new Intent(getApplicationContext(),ItemViewActivity.class);
-                        startActivity(intent);
+
+                        DatabaseReference table_user = userItem;
+
+                        table_user.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                if(dataSnapshot.exists()){
+                                    Intent intent = new Intent(getApplicationContext(),ItemViewActivity.class);
+                                    startActivity(intent);
+                                }
+                                else{
+                                    Toast.makeText(MainActivity.this, "No Items to View", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
                     }
                 }
             });
