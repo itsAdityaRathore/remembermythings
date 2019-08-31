@@ -9,6 +9,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,19 +34,25 @@ import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import butterknife.BindView;
 import id.zelory.compressor.Compressor;
@@ -56,13 +64,13 @@ public class ItemViewActivity extends AppCompatActivity
     AppCompatImageView edtImage,viewFullImage;
     AppCompatButton btnSelect;
 
+    String categoryId="";
     Items newItem,imageviewItem;
     @BindView(R.id.edt_Name) EditText edtName;
 
     File mediaStorageDir;
     Uri picUri, saveUri;;
     private static final int CAPTURE_IMAGE = 0;
-
 
     //Firebase
     FirebaseDatabase database;
@@ -75,6 +83,11 @@ public class ItemViewActivity extends AppCompatActivity
     //View
     RecyclerView recycler_menu;
     RecyclerView.LayoutManager layoutManager;
+
+    //Search Bar Functionality
+    FirebaseRecyclerAdapter<Items,ItemViewHolder> searchAdapter;
+    List<String> suggestList = new ArrayList<>();
+    MaterialSearchBar materialSearchBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,9 +110,118 @@ public class ItemViewActivity extends AppCompatActivity
             loadMenuNew();
         else
             Toast.makeText(getApplicationContext(), "You Have No Items To View", Toast.LENGTH_SHORT).show();
+
+
+        if(getIntent()!=null)
+        {
+            categoryId = getIntent().getStringExtra("CategoryId");
+        }
+
+        //SearchBar
+        materialSearchBar = findViewById(R.id.searchBar);
+        materialSearchBar.setHint("Enter Yor Item");
+        materialSearchBar.setTextColor(R.color.black);
+        //materialSearchBar.setSpeechMode(false);
+        loadSuggest(); //Function to load suggestion form firebase
+        materialSearchBar.setLastSuggestions(suggestList);
+        materialSearchBar.setCardViewElevation(10);
+        materialSearchBar.addTextChangeListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                //when user type , it will change suggestion list
+
+                List<String> suggest = new ArrayList<String>();
+                for(String search:suggestList)
+                {
+                    if(search.toLowerCase().contains(materialSearchBar.getText().toLowerCase()))
+                    {
+                        suggest.add(search);
+
+                    }
+                    materialSearchBar.setLastSuggestions(suggest );
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+        materialSearchBar.setOnSearchActionListener(new MaterialSearchBar.OnSearchActionListener() {
+            @Override
+            public void onSearchStateChanged(boolean enabled) {
+                //when search bar close , restore orignal adapter
+                if(!enabled)
+                    recycler_menu.setAdapter(adapter);
+            }
+
+            @Override
+            public void onSearchConfirmed(CharSequence text) {
+                // when search finish, show result of search adapter
+                startSearch(text);
+            }
+
+            @Override
+            public void onButtonClicked(int buttonCode) {
+
+            }
+        });
+
+    }
+
+    private void startSearch(CharSequence text) {
+        adapter = new FirebaseRecyclerAdapter<Items, ItemViewHolder>(
+                Items.class,
+                R.layout.view_item,
+                ItemViewHolder.class,
+                items.orderByChild("name").equalTo(text.toString()) //compare name
+        ) {
+
+
+            @Override
+            protected void populateViewHolder(ItemViewHolder viewHolder, Items model, int position) {
+                viewHolder.txtItemName.setText(model.getName());
+                Picasso.get().load(model.getImage()).into(viewHolder.imageView);
+
+                viewHolder.setItemClickListener(new ItemClickListener() {
+                    @Override
+                    public void onClick(View view, int position, boolean isLongClick) {
+                        //Start new Activity
+                        viewImage(model);
+                    }
+                });
+            }
+        };
+        recycler_menu.setAdapter(adapter); //set adapter for recycle view is Search result
+    }
+
+    private void loadSuggest() {
+
+            items.orderByChild("menuId").equalTo(categoryId)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for(DataSnapshot postSnapshot:dataSnapshot.getChildren())
+                        {
+                            Items item = postSnapshot.getValue(Items.class);
+                            suggestList.add(item.getName());  //Add names of food to suggest list
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
     }
 
     private void loadMenuNew() {
+
         adapter = new FirebaseRecyclerAdapter<Items, ItemViewHolder>(
                 Items.class,
                 R.layout.view_item,
@@ -111,14 +233,16 @@ public class ItemViewActivity extends AppCompatActivity
                 viewHolder.txtItemName.setText(model.getName());
                 Picasso.get().load(model.getImage()).into(viewHolder.imageView);
 
+                categoryId = adapter.getItem(position).getName();
+
+
                 viewHolder.setItemClickListener(new ItemClickListener() {
+
                     @Override
                     public void onClick(View view, int position, boolean isLongClick) {
                         Toast.makeText(ItemViewActivity.this, "Long Press On The Item To Update/Delete", Toast.LENGTH_SHORT).show();
                         viewImage(model);
                     }
-
-
                 });
             }
         };
@@ -151,6 +275,7 @@ public class ItemViewActivity extends AppCompatActivity
         {
             showUpdateFoodDialog(adapter.getRef(item.getOrder()).getKey(),adapter.getItem(item.getOrder()));
         }
+
         else if (item.getTitle().equals(Common.DELETE))
         {
             deleteFood(adapter.getRef(item.getOrder()).getKey());
@@ -309,7 +434,7 @@ public class ItemViewActivity extends AppCompatActivity
                                 newItem = new Items(edtName.getText().toString(), uri.toString());
                                 //we create new category
                                 if (newItem != null) {
-                                   items.push().setValue(newItem);
+                                    items.push().setValue(newItem);
                                     deleteFood(adapter.getRef(myItem.getOrder()).getKey());
                                     //Snackbar.make(drawer,"New Item "+newItem.getName()+" was added", Snackbar.LENGTH_SHORT).show();
                                     Toast.makeText(ItemViewActivity.this, "New Item " + newItem.getName() + " was added", Toast.LENGTH_SHORT).show();
@@ -363,42 +488,6 @@ public class ItemViewActivity extends AppCompatActivity
         }
         return mediaFile;
     }
-
-  /*  private void loadMenu() {
-
-//        Query query = FirebaseDatabase.getInstance()
-//                .getReference("Items")
-//                .limitToLast(50);
-
-        FirebaseRecyclerOptions<Items> options =
-                new FirebaseRecyclerOptions.Builder<Items>()
-                        .setQuery(items, Items.class)
-                        .build();
-
-        adapter = new FirebaseRecyclerAdapter<Items, ItemViewHolder>(options){
-
-
-
-            @Override
-            public ItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-
-                View view = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.view_item, parent, false);
-
-                return new ItemViewHolder(view);
-            }
-
-            @Override
-            protected void onBindViewHolder(ItemViewHolder itemViewHolder, int i, Items items) {
-                itemViewHolder.txtItemName.setText(items.getName());
-                Picasso.get().load(items.getImage()).into(itemViewHolder.imageView);
-                //itemViewHolder.imageView.setImageURI();
-            }
-        };
-        adapter.notifyDataSetChanged();
-        recycler_menu.setAdapter(adapter);
-    }
-*/
 
     @Override
     public boolean onNavigationItemSelected(MenuItem menuItem) {

@@ -2,7 +2,6 @@ package com.aditya.remembermythings.Activity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -29,8 +28,8 @@ public class SignupActivity extends AppCompatActivity {
     private static final String TAG = "SignupActivity";
 
     @BindView(R.id.input_name) EditText _nameText;
- //   @BindView(R.id.input_address) EditText _addressText;
- //   @BindView(R.id.input_email) EditText _emailText;
+ // @BindView(R.id.input_address) EditText _addressText;
+ // @BindView(R.id.input_email) EditText _emailText;
     @BindView(R.id.input_mobile) EditText _mobileText;
     @BindView(R.id.input_password) EditText _passwordText;
     @BindView(R.id.input_reEnterPassword) EditText _reEnterPasswordText;
@@ -65,7 +64,6 @@ public class SignupActivity extends AppCompatActivity {
 
     public void signup() {
         Log.d(TAG, "Signup");
-       // Toast.makeText(SignupActivity.this, "Im th Butoon", Toast.LENGTH_SHORT).show();
 
         if (!validate()) {
             onSignupFailed();
@@ -96,7 +94,7 @@ public class SignupActivity extends AppCompatActivity {
             table_user.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    //Toast.makeText(SignupActivity.this, "im here", Toast.LENGTH_SHORT).show();
+
                     //check if user already registerd
                     if(dataSnapshot.exists())
                     {
@@ -114,13 +112,15 @@ public class SignupActivity extends AppCompatActivity {
                         table_user.setValue(user);
                         user.setuPhone(mobile);
 
-                        SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
-                        Boolean firstStart = prefs.getBoolean("first_start", true);
+//                        SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
+//                        Boolean firstStart = prefs.getBoolean("first_start", true);
 
-                            Intent intent = new Intent(getApplicationContext(), FirstStartActivity.class);
-                            Common.currentUser = user;
-                            startActivity(intent);
-                            //Toast.makeText(SignupActivity.this, "Sign Up Successful", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(getApplicationContext(), FirstStartActivity.class);
+                        Common.currentUser = user;
+                        intent.putExtra("uPhone",mobile);
+                        startActivity(intent);
+                        finish();
+                        //Toast.makeText(SignupActivity.this, "Sign Up Successful", Toast.LENGTH_SHORT).show();
 
                     }
                 }
@@ -136,7 +136,7 @@ public class SignupActivity extends AppCompatActivity {
                         public void run() {
                             // On complete call either onSignupSuccess or onSignupFailed
                             // depending on success
-                            //onSignupSuccess();
+                            onSignupSuccess();
                             // onSignupFailed();
                             progressDialog.dismiss();
                         }
@@ -149,9 +149,9 @@ public class SignupActivity extends AppCompatActivity {
 
     private void firstShow(){
 
-        Intent intent2 = new Intent(getApplicationContext(), FirstStartActivity.class);
-        startActivity(intent2);
-        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+//        Intent intent2 = new Intent(getApplicationContext(), FirstStartActivity.class);
+//        startActivity(intent2);
+//        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
 
         /*SharedPreferences prefs = getSharedPreferences("prefs",MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();

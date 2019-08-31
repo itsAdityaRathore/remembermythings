@@ -47,6 +47,9 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
+        inputPhone.clearFocus();
+        inputPhone.setFocusableInTouchMode(true);
+
 
         //Init Paper to store user pass to android
         Paper.init(this);
@@ -79,6 +82,8 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
     }
+
+
 
     private void loginAuto(String phone, String pwd) {
         if (Common.isConnectedToInternet(getBaseContext())) {

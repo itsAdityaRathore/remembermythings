@@ -29,6 +29,8 @@ import com.aditya.remembermythings.Common.Common;
 import com.aditya.remembermythings.Model.Items;
 import com.aditya.remembermythings.Model.User;
 import com.aditya.remembermythings.R;
+import com.aditya.remembermythings.ViewHolder.ItemViewHolder;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -40,6 +42,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 import com.vanniktech.rxpermission.Permission;
 import com.vanniktech.rxpermission.RealRxPermission;
 import com.vanniktech.rxpermission.RxPermission;
@@ -81,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
     FirebaseStorage storage;
     StorageReference storageReference;
 
+    FirebaseRecyclerAdapter<Items, ItemViewHolder> adapter;
+
         File mediaStorageDir;
         Uri picUri;
         private static final int CAPTURE_IMAGE = 0;
@@ -102,17 +107,17 @@ public class MainActivity extends AppCompatActivity {
 
         if (getIntent().hasExtra("uPhone")){
             uPhone = getIntent().getStringExtra("uPhone");
-            //Toast.makeText(this, "User = "+uPhone, Toast.LENGTH_SHORT).show();
         }
 
         //Init Firebase
         database = FirebaseDatabase.getInstance();
         items = database.getReference("Items");
-        userItem = items.child(Common.currentUser.getuPhone());
+        //userItem = items.child(Common.currentUser.getuPhone());
+        userItem = items.child(uPhone);
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
 
-        mainGrid = (GridLayout) findViewById(R.id.mainGrid);
+        mainGrid = findViewById(R.id.mainGrid);
         //Set Event
         setSingleEvent(mainGrid);
         //setToggleEvent(mainGrid);
@@ -176,7 +181,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -199,9 +203,10 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
+    String myAdapter;
 
     private void setSingleEvent(GridLayout mainGrid) {
+
         //Loop all child item of Main Grid
         for (int i = 0; i < mainGrid.getChildCount(); i++) {
             //You can see , all child item is CardView , so we just cast object to CardView
@@ -221,6 +226,21 @@ public class MainActivity extends AppCompatActivity {
                     }
                     else if(finalI == 1){
 
+                        adapter = new FirebaseRecyclerAdapter<Items, ItemViewHolder>(
+                                Items.class,
+                                R.layout.view_item,
+                                ItemViewHolder.class,
+                                items){
+
+                            @Override
+                            protected void populateViewHolder(ItemViewHolder itemViewHolder, Items items, int i) {
+                                itemViewHolder.txtItemName.setText(items.getName());
+                                Picasso.get().load(items.getImage()).into(itemViewHolder.imageView);
+                                myAdapter = adapter.getRef(i).getKey();
+                            }
+                        };
+
+
                         DatabaseReference table_user = userItem;
 
                         table_user.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -228,6 +248,8 @@ public class MainActivity extends AppCompatActivity {
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 if(dataSnapshot.exists()){
                                     Intent intent = new Intent(getApplicationContext(),ItemViewActivity.class);
+                                    intent.putExtra("CategoryId",myAdapter);
+
                                     startActivity(intent);
                                 }
                                 else{
@@ -240,6 +262,19 @@ public class MainActivity extends AppCompatActivity {
 
                             }
                         });
+                    }
+                    else if(finalI==2){
+
+                        Intent settingIntent = new Intent(MainActivity.this,SettingsActivity.class);
+                        startActivity(settingIntent);
+                    }
+                    else if(finalI==3){
+                        //delete remember user after logout
+                        Paper.book().destroy();
+
+                        Intent logIn = new Intent(MainActivity.this,LoginActivity.class);
+                        logIn.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(logIn);
                     }
                 }
             });
@@ -266,13 +301,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        btnUpload.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//               // uploadImage();
-//            }
-//        });
-
         alertDialog.setView(add_item_layout);
         //alertDialog.setIcon(R.drawable.ic_shopping_cart_black_24dp);
 
@@ -285,15 +313,6 @@ public class MainActivity extends AppCompatActivity {
                 String name = edtName.getText().toString();
                 if(!name.isEmpty()){
                     uploadImage();
-//                    //we create new category
-//                    if(newItem != null)
-//                    {
-//                        userItem.push().setValue(newItem);
-//                        // Snackbar.make(drawer,"New Item "+newItem.getName()+" was added",Snackbar.LENGTH_SHORT).show();
-//                        Toast.makeText(MainActivity.this, "New Item "+newItem.getName()+" was added", Toast.LENGTH_SHORT).show();
-//                    }else{
-//                        Toast.makeText(MainActivity.this, "Empty..!!!", Toast.LENGTH_SHORT).show();
-//                    }
                 }
                 else{
                     Toast.makeText(MainActivity.this, "Name cannot be Empty..!!!", Toast.LENGTH_SHORT).show();
@@ -365,19 +384,6 @@ public class MainActivity extends AppCompatActivity {
         return mediaFile;
     }
 
-
-
-   /* @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if(requestCode == Common.PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null)
-        {
-            saveUri = data.getData();
-            btnSelect.setText("Image Selected");
-        }
-    }
-*/
     private void uploadImage() {
         //Toast.makeText(this, "Im in Upload", Toast.LENGTH_SHORT).show();
         if(picUri != null) {
