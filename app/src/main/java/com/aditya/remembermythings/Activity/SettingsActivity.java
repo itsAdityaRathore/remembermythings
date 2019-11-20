@@ -13,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.aditya.remembermythings.Common.Common;
 import com.aditya.remembermythings.Model.User;
 import com.aditya.remembermythings.R;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -27,6 +29,7 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String TAG = "SettingsActivity";
 
 
+
     @BindView(R.id.txtOldPass) EditText oldPassword;
     @BindView(R.id.txtNewPass) EditText newPassword;
     @BindView(R.id.txtConfirmPass) EditText confirmPassword;
@@ -38,6 +41,11 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         ButterKnife.bind(this);
+
+        //Banner Ads
+        AdView mAdView = findViewById(R.id.adViewSettings);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
 
         changePassword.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -52,7 +60,7 @@ public class SettingsActivity extends AppCompatActivity {
         Log.d(TAG, "Change Password");
 
         if (!validate()) {
-            Toast.makeText(this, "Cannot be empty", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "Cannot be empty", Toast.LENGTH_SHORT).show();
             return;
         }
 

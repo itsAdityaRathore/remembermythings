@@ -1,11 +1,14 @@
 package com.aditya.remembermythings.Activity;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -23,6 +26,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.rengwuxian.materialedittext.MaterialEditText;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -33,13 +37,19 @@ public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
     private static final int REQUEST_SIGNUP = 0;
 
-    @BindView(R.id.input_phone) EditText inputPhone;
-    @BindView(R.id.input_password) EditText inputPassword;
-    @BindView(R.id.btn_login) AppCompatButton btnLogin;
-    @BindView(R.id.link_signup) TextView linkSignup;
+    @BindView(R.id.input_phone)
+    EditText inputPhone;
+    @BindView(R.id.input_password)
+    EditText inputPassword;
+    @BindView(R.id.btn_login)
+    AppCompatButton btnLogin;
+    @BindView(R.id.link_signup)
+    TextView linkSignup;
+    @BindView(R.id.txtForgotPwd)
+    TextView textFgtPwd;
 
-    @BindView(R.id.ckbRemember) AppCompatCheckBox btnChkbox;
-
+    @BindView(R.id.ckbRemember)
+    AppCompatCheckBox btnChkbox;
 
 
     @Override
@@ -74,15 +84,22 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        textFgtPwd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showForgotPwdDialog();
+            }
+        });
+
+
         String user = Paper.book().read(Common.USER_KEY);
         String pwd = Paper.book().read(Common.PWD_KEY);
-        if(user != null && pwd != null){
-            if(!user.isEmpty() && !pwd.isEmpty()){
-                loginAuto(user,pwd);
+        if (user != null && pwd != null) {
+            if (!user.isEmpty() && !pwd.isEmpty()) {
+                loginAuto(user, pwd);
             }
         }
     }
-
 
 
     private void loginAuto(String phone, String pwd) {
@@ -113,10 +130,10 @@ public class LoginActivity extends AppCompatActivity {
                         if (user.getuPassword().equals(pwd)) {
 
                             Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                            intent.putExtra("uPhone",phone);
+                            intent.putExtra("uPhone", phone);
                             startActivity(intent);
                             Common.currentUser = user;
-                            finish();
+                            //finish();
 
                         } else {
                             Toast.makeText(LoginActivity.this, "Wrong Password !!!", Toast.LENGTH_SHORT).show();
@@ -173,7 +190,7 @@ public class LoginActivity extends AppCompatActivity {
             FirebaseDatabase database = FirebaseDatabase.getInstance();
             final DatabaseReference table_user = database.getReference("Users");
 
-            table_user.addValueEventListener(new ValueEventListener() {
+            table_user.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
 
@@ -187,7 +204,7 @@ public class LoginActivity extends AppCompatActivity {
                         if (user.getuPassword().equals(password)) {
 
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            intent.putExtra("uPhone",phone);
+                            intent.putExtra("uPhone", phone);
                             startActivity(intent);
                             Common.currentUser = user;
                             finish();
@@ -205,6 +222,7 @@ public class LoginActivity extends AppCompatActivity {
                 public void onCancelled(DatabaseError databaseError) {
 
                 }
+
             });
 
 
@@ -212,9 +230,10 @@ public class LoginActivity extends AppCompatActivity {
                     new Runnable() {
                         public void run() {
                             // On complete call either onLoginSuccess or onLoginFailed
+                            progressDialog.dismiss();
                             onLoginSuccess();
                             // onLoginFailed();
-                            progressDialog.dismiss();
+
                         }
                     }, 3000);
         } else {
@@ -223,16 +242,16 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void firstShow(){
+    private void firstShow() {
 
         Intent intent2 = new Intent(getApplicationContext(), FirstStartActivity.class);
         startActivity(intent2);
         finish();
         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
 
-        SharedPreferences prefs = getSharedPreferences("prefs",MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean("first_start",false);
+        editor.putBoolean("first_start", false);
         editor.apply();
     }
 
@@ -273,7 +292,7 @@ public class LoginActivity extends AppCompatActivity {
         String phone = inputPhone.getText().toString();
         String password = inputPassword.getText().toString();
 
-        if (phone.isEmpty() ) {
+        if (phone.isEmpty()) {
             inputPhone.setError("enter a valid phone number");
             valid = false;
         } else {
@@ -288,4 +307,63 @@ public class LoginActivity extends AppCompatActivity {
         }
         return valid;
     }
+
+
+    private void showForgotPwdDialog() {
+
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        final DatabaseReference table_user = database.getReference("Users");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Forgot Password");
+        builder.setMessage("Enter food you set at the time of signup..");
+
+        LayoutInflater inflater = this.getLayoutInflater();
+        View forgot_view = inflater.inflate(R.layout.forgot_password_layout, null);
+
+        builder.setView(forgot_view);
+        builder.setIcon(R.drawable.ic_security_black_24dp);
+
+        final MaterialEditText edtPhone = forgot_view.findViewById(R.id.edtPhone);
+        final MaterialEditText edtSecureCode = forgot_view.findViewById(R.id.edtSecureCode);
+
+        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //Check if user is available
+                table_user.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        if (dataSnapshot.child(edtPhone.getText().toString()).exists()) {
+
+                            User user = dataSnapshot.child(edtPhone.getText().toString()).getValue(User.class);
+
+                            if (user.getuSecQues().equals(edtSecureCode.getText().toString()))
+                                Toast.makeText(LoginActivity.this, "Your password : " + user.getuPassword(), Toast.LENGTH_LONG).show();
+                            else
+                                Toast.makeText(LoginActivity.this, "Wrong secure code !!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(LoginActivity.this, "User Doesn't exist!!!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+            }
+        });
+        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+
+        builder.show();
+
+    }
+
 }

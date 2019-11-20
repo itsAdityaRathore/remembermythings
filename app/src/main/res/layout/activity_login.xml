@@ -4,21 +4,19 @@
     android:layout_height="fill_parent"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:fitsSystemWindows="true">
 
     <LinearLayout
-        android:layout_marginTop="30dp"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="56dp"
+        android:paddingTop="40dp"
         android:paddingLeft="24dp"
         android:paddingRight="24dp">
 
-        <ImageView android:src="@drawable/logo2"
+        <ImageView android:src="@drawable/logo3"
             android:layout_width="wrap_content"
-            android:layout_height="78dp"
+            android:layout_height="120dp"
             android:layout_marginBottom="24dp"
             android:layout_gravity="center_horizontal" />
 
@@ -34,7 +32,7 @@
                 android:inputType="number"
                 android:maxLength="10"
 
-                android:hint="Phone Number" />
+                android:hint="Mobile Number" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!--  Password Label -->
@@ -75,7 +73,8 @@
                 android:gravity="end"
                 android:layout_weight="1"
                 android:width="0dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content" />
 
         </LinearLayout>
 

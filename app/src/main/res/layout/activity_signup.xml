@@ -9,26 +9,25 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="56dp"
+        android:paddingTop="24dp"
         android:paddingLeft="24dp"
         android:paddingRight="24dp">
 
-        <ImageView android:src="@drawable/logo2"
+        <ImageView android:src="@drawable/logo3"
             android:layout_width="wrap_content"
-            android:layout_height="78dp"
-            android:layout_marginBottom="24dp"
+            android:layout_height="120dp"
+            android:layout_marginBottom="15dp"
             android:layout_gravity="center_horizontal" />
 
         <!-- Name Label -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp">
             <EditText android:id="@+id/input_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPersonName"
+                android:inputType="textCapWords"
                 android:hint="Name" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -64,7 +63,6 @@
         <!-- mobile number -->
         <com.google.android.material.textfield.TextInputLayout            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp">
             <EditText android:id="@+id/input_mobile"
                 android:layout_width="match_parent"
@@ -76,7 +74,6 @@
         <!-- Password Label -->
         <com.google.android.material.textfield.TextInputLayout            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp">
             <EditText android:id="@+id/input_password"
                 android:layout_width="match_parent"
@@ -88,13 +85,23 @@
         <!-- Password Re-enter Label -->
         <com.google.android.material.textfield.TextInputLayout            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+
             android:layout_marginBottom="8dp">
             <EditText android:id="@+id/input_reEnterPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
                 android:hint="Re-enter Password"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp">
+            <EditText android:id="@+id/input_secQues"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapWords"
+                android:hint="Your favourite food ?"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Signup Button -->

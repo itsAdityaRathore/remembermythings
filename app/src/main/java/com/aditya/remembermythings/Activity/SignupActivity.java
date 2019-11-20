@@ -33,6 +33,7 @@ public class SignupActivity extends AppCompatActivity {
     @BindView(R.id.input_mobile) EditText _mobileText;
     @BindView(R.id.input_password) EditText _passwordText;
     @BindView(R.id.input_reEnterPassword) EditText _reEnterPasswordText;
+    @BindView(R.id.input_secQues) EditText _secQues;
     @BindView(R.id.btn_signup) Button _signupButton;
     @BindView(R.id.link_login) TextView _loginLink;
     
@@ -83,6 +84,7 @@ public class SignupActivity extends AppCompatActivity {
             String mobile = _mobileText.getText().toString();
             String password = _passwordText.getText().toString();
             String reEnterPassword = _reEnterPasswordText.getText().toString();
+            String secQues = _secQues.getText().toString();
 
             // TODO: Implement your own signup logic here.
 
@@ -108,17 +110,20 @@ public class SignupActivity extends AppCompatActivity {
                         progressDialog.setMessage("Creating Account...");
                         progressDialog.show();
 
-                        User user = new User(name,password);
+                        User user = new User(name,password,secQues);
                         table_user.setValue(user);
                         user.setuPhone(mobile);
 
 //                        SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
 //                        Boolean firstStart = prefs.getBoolean("first_start", true);
 
+
+
                         Intent intent = new Intent(getApplicationContext(), FirstStartActivity.class);
                         Common.currentUser = user;
                         intent.putExtra("uPhone",mobile);
                         startActivity(intent);
+
                         finish();
                         //Toast.makeText(SignupActivity.this, "Sign Up Successful", Toast.LENGTH_SHORT).show();
 
@@ -136,9 +141,10 @@ public class SignupActivity extends AppCompatActivity {
                         public void run() {
                             // On complete call either onSignupSuccess or onSignupFailed
                             // depending on success
+                            progressDialog.dismiss();
                             onSignupSuccess();
                             // onSignupFailed();
-                            progressDialog.dismiss();
+
                         }
                     }, 3000);
         } else {
@@ -163,7 +169,7 @@ public class SignupActivity extends AppCompatActivity {
     public void onSignupSuccess() {
         _signupButton.setEnabled(true);
         setResult(RESULT_OK, null);
-        finish();
+        //finish();
     }
 
     public void onSignupFailed() {

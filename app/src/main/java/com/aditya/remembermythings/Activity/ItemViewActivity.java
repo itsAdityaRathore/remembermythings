@@ -31,16 +31,18 @@ import com.aditya.remembermythings.R;
 import com.aditya.remembermythings.ViewHolder.ItemClickListener;
 import com.aditya.remembermythings.ViewHolder.ItemViewHolder;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.mancj.materialsearchbar.MaterialSearchBar;
@@ -60,39 +62,77 @@ import id.zelory.compressor.Compressor;
 public class ItemViewActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    //InterstitialAd mInterstitialAd;
+    public int counter;
+
     TextView txtFullName;
-    AppCompatImageView edtImage,viewFullImage;
+    AppCompatImageView edtImage, viewFullImage;
     AppCompatButton btnSelect;
 
-    String categoryId="";
-    Items newItem,imageviewItem;
-    @BindView(R.id.edt_Name) EditText edtName;
+    String categoryId = "";
+    Items newItem, imageviewItem;
+    @BindView(R.id.edt_Name)
+    EditText edtName;
 
     File mediaStorageDir;
-    Uri picUri, saveUri;;
+    Uri picUri, saveUri;
+    ;
     private static final int CAPTURE_IMAGE = 0;
 
     //Firebase
     FirebaseDatabase database;
-    DatabaseReference items,userItem;
+    DatabaseReference items, userItem;
     FirebaseStorage storage;
     StorageReference storageReference;
     FirebaseRecyclerAdapter<Items, ItemViewHolder> adapter;
 
     MenuItem myItem;
     //View
+
     RecyclerView recycler_menu;
     RecyclerView.LayoutManager layoutManager;
 
     //Search Bar Functionality
-    FirebaseRecyclerAdapter<Items,ItemViewHolder> searchAdapter;
+    FirebaseRecyclerAdapter<Items, ItemViewHolder> searchAdapter;
     List<String> suggestList = new ArrayList<>();
     MaterialSearchBar materialSearchBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_view);
+
+        AdView mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+
+//        //InterstitialAds
+//        mInterstitialAd = new InterstitialAd(this);
+//        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+//        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+//        mInterstitialAd.setAdListener(new AdListener() {
+//            @Override
+//            public void onAdClosed() {
+//                super.onAdClosed();
+//                //finish();
+//            }
+//        });
+
+//        int random = ThreadLocalRandom.current().nextInt(5, 15);
+//        int newRandom = random * 1000;
+//
+//        new CountDownTimer(newRandom, 1000) {
+//            @Override
+//            public void onTick(long millisUntilFinished) {
+//                counter++;
+//            }
+//
+//            @Override
+//            public void onFinish() {
+//                showInterstitial();
+//            }
+//        }.start();
 
         //Init Firebase
         database = FirebaseDatabase.getInstance();
@@ -101,30 +141,31 @@ public class ItemViewActivity extends AppCompatActivity
         storageReference = storage.getReference();
 
         //Init View
-        recycler_menu = (RecyclerView)findViewById(R.id.recycler_menu);
+        recycler_menu = findViewById(R.id.recycler_menu);
         recycler_menu.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(getApplicationContext());
         recycler_menu.setLayoutManager(layoutManager);
 
-        if(items!=null)
+        if (items != null) {
             loadMenuNew();
-        else
+        } else
             Toast.makeText(getApplicationContext(), "You Have No Items To View", Toast.LENGTH_SHORT).show();
 
 
-        if(getIntent()!=null)
-        {
+        if (getIntent() != null) {
             categoryId = getIntent().getStringExtra("CategoryId");
         }
 
         //SearchBar
         materialSearchBar = findViewById(R.id.searchBar);
-        materialSearchBar.setHint("Enter Yor Item");
+        materialSearchBar.setHint("Enter item name");
         materialSearchBar.setTextColor(R.color.black);
         //materialSearchBar.setSpeechMode(false);
-        loadSuggest(); //Function to load suggestion form firebase
+        loadSuggest();
+        //Function to load suggestion form firebase
         materialSearchBar.setLastSuggestions(suggestList);
         materialSearchBar.setCardViewElevation(10);
+        materialSearchBar.setPlaceHolder("Search items..");
         materialSearchBar.addTextChangeListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -136,14 +177,12 @@ public class ItemViewActivity extends AppCompatActivity
                 //when user type , it will change suggestion list
 
                 List<String> suggest = new ArrayList<String>();
-                for(String search:suggestList)
-                {
-                    if(search.toLowerCase().contains(materialSearchBar.getText().toLowerCase()))
-                    {
+                for (String search : suggestList) {
+                    if (search.toLowerCase().contains(materialSearchBar.getText().toLowerCase())) {
                         suggest.add(search);
 
                     }
-                    materialSearchBar.setLastSuggestions(suggest );
+                    materialSearchBar.setLastSuggestions(suggest);
                 }
             }
 
@@ -156,7 +195,7 @@ public class ItemViewActivity extends AppCompatActivity
             @Override
             public void onSearchStateChanged(boolean enabled) {
                 //when search bar close , restore orignal adapter
-                if(!enabled)
+                if (!enabled)
                     recycler_menu.setAdapter(adapter);
             }
 
@@ -173,6 +212,14 @@ public class ItemViewActivity extends AppCompatActivity
         });
 
     }
+
+//    public void showInterstitial() {
+//        if (mInterstitialAd.isLoaded()) {
+//            mInterstitialAd.show();
+//        } else {
+//            //finish();
+//        }
+//    }
 
     private void startSearch(CharSequence text) {
         adapter = new FirebaseRecyclerAdapter<Items, ItemViewHolder>(
@@ -202,12 +249,11 @@ public class ItemViewActivity extends AppCompatActivity
 
     private void loadSuggest() {
 
-            items.orderByChild("menuId").equalTo(categoryId)
+        items.orderByChild("menuId").equalTo(categoryId)
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        for(DataSnapshot postSnapshot:dataSnapshot.getChildren())
-                        {
+                        for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
                             Items item = postSnapshot.getValue(Items.class);
                             suggestList.add(item.getName());  //Add names of food to suggest list
                         }
@@ -220,6 +266,7 @@ public class ItemViewActivity extends AppCompatActivity
                 });
     }
 
+
     private void loadMenuNew() {
 
         adapter = new FirebaseRecyclerAdapter<Items, ItemViewHolder>(
@@ -227,20 +274,19 @@ public class ItemViewActivity extends AppCompatActivity
                 R.layout.view_item,
                 ItemViewHolder.class,
                 items
-        )   {
+        ) {
             @Override
             protected void populateViewHolder(ItemViewHolder viewHolder, Items model, int position) {
+
                 viewHolder.txtItemName.setText(model.getName());
                 Picasso.get().load(model.getImage()).into(viewHolder.imageView);
-
                 categoryId = adapter.getItem(position).getName();
-
 
                 viewHolder.setItemClickListener(new ItemClickListener() {
 
                     @Override
                     public void onClick(View view, int position, boolean isLongClick) {
-                        Toast.makeText(ItemViewActivity.this, "Long Press On The Item To Update/Delete", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(ItemViewActivity.this, "Long Press On The Item To Update/Delete", Toast.LENGTH_SHORT).show();
                         viewImage(model);
                     }
                 });
@@ -253,17 +299,14 @@ public class ItemViewActivity extends AppCompatActivity
     public void viewImage(Items item) {
 
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(ItemViewActivity.this);
-        alertDialog.setTitle("You can find your item here.");
-        alertDialog.setIcon(R.drawable.view_property);
+        alertDialog.setTitle("Search this place");
+        alertDialog.setMessage("Long Press On The Item in the list To Update or Delete");
+        //alertDialog.setIcon(R.drawable.view_property);
         LayoutInflater inflater = this.getLayoutInflater();
-        View add_image_layout = inflater.inflate(R.layout.view_full_image,null);
-
+        View add_image_layout = inflater.inflate(R.layout.view_full_image, null);
         viewFullImage = add_image_layout.findViewById(R.id.viewFullImage);
-
         Picasso.get().load(item.getImage()).into(viewFullImage);
-
         alertDialog.setView(add_image_layout);
-
         alertDialog.show();
     }
 
@@ -271,13 +314,9 @@ public class ItemViewActivity extends AppCompatActivity
     public boolean onContextItemSelected(MenuItem item) {
         myItem = item;
 
-        if(item.getTitle().equals(Common.UPDATE))
-        {
-            showUpdateFoodDialog(adapter.getRef(item.getOrder()).getKey(),adapter.getItem(item.getOrder()));
-        }
-
-        else if (item.getTitle().equals(Common.DELETE))
-        {
+        if (item.getTitle().equals(Common.UPDATE)) {
+            showUpdateFoodDialog(adapter.getRef(item.getOrder()).getKey(), adapter.getItem(item.getOrder()));
+        } else if (item.getTitle().equals(Common.DELETE)) {
             deleteFood(adapter.getRef(item.getOrder()).getKey());
         }
 
@@ -296,7 +335,7 @@ public class ItemViewActivity extends AppCompatActivity
         alertDialog.setMessage("Please fill full information");
 
         LayoutInflater inflater = this.getLayoutInflater();
-        View add_menu_layout = inflater.inflate(R.layout.add_new_item,null);
+        View add_menu_layout = inflater.inflate(R.layout.add_new_item, null);
 
         edtName = add_menu_layout.findViewById(R.id.edt_Name);
         edtImage = add_menu_layout.findViewById(R.id.edtImage);
@@ -325,14 +364,13 @@ public class ItemViewActivity extends AppCompatActivity
             public void onClick(DialogInterface dialog, int which) {
 
                 String name = edtName.getText().toString();
-                if(!name.isEmpty()){
+                if (!name.isEmpty()) {
 
 //                    item.setName(name);
 //                    items.child(key).setValue(item);
                     uploadImage();
 
-                }
-                else{
+                } else {
                     Toast.makeText(ItemViewActivity.this, "Name cannot be Empty..!!!", Toast.LENGTH_SHORT).show();
                 }
 
@@ -353,25 +391,25 @@ public class ItemViewActivity extends AppCompatActivity
 
         File file = getOutputMediaFile(1);
         picUri = Uri.fromFile(file); // create
-        i.putExtra(MediaStore.EXTRA_OUTPUT,picUri); // set the image file
+        i.putExtra(MediaStore.EXTRA_OUTPUT, picUri); // set the image file
 
         startActivityForResult(i, CAPTURE_IMAGE);
 
     }
 
     @Override
-    protected  void onActivityResult(int requestCode, int resultCode, Intent data){
-        super.onActivityResult(requestCode,resultCode,data);
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
         Uri uri = picUri;
-        Bitmap imageBitmap=null;
+        Bitmap imageBitmap = null;
 
         try {
             imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), picUri);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(imageBitmap!=null) {
+        if (imageBitmap != null) {
             btnSelect.setText("Image Selected");
             edtImage.setImageBitmap(imageBitmap);
         }
@@ -380,7 +418,7 @@ public class ItemViewActivity extends AppCompatActivity
 
     private void uploadImage() {
         //Toast.makeText(this, "Im in Upload", Toast.LENGTH_SHORT).show();
-        if(picUri != null) {
+        if (picUri != null) {
             final ProgressDialog mDialog = new ProgressDialog(this);
             mDialog.setMessage("Uploading...");
             mDialog.show();
@@ -423,12 +461,10 @@ public class ItemViewActivity extends AppCompatActivity
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                         mDialog.dismiss();
-                        Toast.makeText(ItemViewActivity.this, "Uploaded succesfully", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(ItemViewActivity.this, "Uploaded succesfully", Toast.LENGTH_SHORT).show();
                         imageFolder.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri uri) {
-
-
 
                                 // set value for newCategory and we can get download link
                                 newItem = new Items(edtName.getText().toString(), uri.toString());
@@ -436,8 +472,10 @@ public class ItemViewActivity extends AppCompatActivity
                                 if (newItem != null) {
                                     items.push().setValue(newItem);
                                     deleteFood(adapter.getRef(myItem.getOrder()).getKey());
-                                    //Snackbar.make(drawer,"New Item "+newItem.getName()+" was added", Snackbar.LENGTH_SHORT).show();
-                                    Toast.makeText(ItemViewActivity.this, "New Item " + newItem.getName() + " was added", Toast.LENGTH_SHORT).show();
+                                    actualImage.delete();
+                                    Snackbar.make(findViewById(R.id.itemview), "New Item " + newItem.getName() + " was added", Snackbar.LENGTH_SHORT).show();
+
+
                                 }
                             }
                         });
@@ -450,29 +488,25 @@ public class ItemViewActivity extends AppCompatActivity
                                 Toast.makeText(ItemViewActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
                             }
                         })
-                        .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                            @Override
-                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                                int progress = (100 * (int) taskSnapshot.getBytesTransferred() / (int) taskSnapshot.getTotalByteCount());
-                                mDialog.setMessage("Uploaded " + progress + " %");
-                            }
-                        });
+                ;
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }   else{
+        } else {
             Toast.makeText(this, "Please Click the image first..!!!", Toast.LENGTH_LONG).show();
         }
     }
 
-    /** Create a File for saving an image */
-    private File getOutputMediaFile(int type){
+    /**
+     * Create a File for saving an image
+     */
+    private File getOutputMediaFile(int type) {
         mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES), "CameraApp");
 
         /**Create the storage directory if it does not exist*/
-        if (! mediaStorageDir.exists()){
-            if (! mediaStorageDir.mkdirs()){
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
                 return null;
             }
         }
@@ -480,9 +514,9 @@ public class ItemViewActivity extends AppCompatActivity
         /**Create a media file name*/
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         File mediaFile;
-        if (type == 1){
+        if (type == 1) {
             mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "IMG_"+ timeStamp + ".png");
+                    "IMG_" + timeStamp + ".png");
         } else {
             return null;
         }
@@ -492,5 +526,11 @@ public class ItemViewActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem menuItem) {
         return false;
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
     }
 }

@@ -10,12 +10,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.aditya.remembermythings.Common.Common;
 import com.aditya.remembermythings.R;
 
+import java.util.List;
+
 public class ItemViewHolder extends RecyclerView.ViewHolder implements
         View.OnClickListener,
         View.OnCreateContextMenuListener{
 
     public TextView txtItemName;
     public ImageView imageView;
+
+    private List<Object> recyclerViewItems;
 
     private ItemClickListener itemClickListener;
 
@@ -31,6 +35,13 @@ public class ItemViewHolder extends RecyclerView.ViewHolder implements
 
         itemView.setOnCreateContextMenuListener(this);
         itemView.setOnClickListener(this);
+    }
+
+    public class AdViewHolder extends RecyclerView.ViewHolder{
+        AdViewHolder(View view){
+            super(view);
+
+        }
     }
 
     @Override

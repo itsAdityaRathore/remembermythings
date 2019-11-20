@@ -4,14 +4,16 @@ public class User {
     private String uName;
     private String uPhone;
     private String uPassword;
+    private String uSecQues;
 
 
     public User() {
     }
 
-    public User(String uName, String uPassword) {
+    public User(String uName, String uPassword, String uSecQues) {
         this.uName = uName;
         this.uPassword = uPassword;
+        this.uSecQues = uSecQues;
     }
 
     public String getuName() {
@@ -36,5 +38,13 @@ public class User {
 
     public void setuPassword(String uPassword) {
         this.uPassword = uPassword;
+    }
+
+    public String getuSecQues() {
+        return uSecQues;
+    }
+
+    public void setuSecQues(String uSecQues) {
+        this.uSecQues = uSecQues;
     }
 }
