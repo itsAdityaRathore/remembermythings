@@ -41,7 +41,7 @@ dependencies {
 
     implementation 'com.google.firebase:firebase-database:18.0.1'
     implementation 'com.google.firebase:firebase-storage:18.1.1'
-    implementation 'com.google.firebase:firebase-core:17.0.0'
+    //implementation 'com.google.firebase:firebase-core:17.0.0'
     implementation 'com.google.firebase:firebase-auth:18.1.0'
     implementation 'com.firebaseui:firebase-ui-auth:4.3.1'
     implementation 'com.firebaseui:firebase-ui-database:1.2.0'
@@ -61,7 +61,15 @@ dependencies {
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
 
     //admob
-    implementation 'com.google.android.gms:play-services-ads:18.2.0'
+    implementation 'com.google.android.gms:play-services-ads:18.3.0'
+
+
+    //lottieAnimaition
+    implementation 'com.airbnb.android:lottie:3.2.2'
+
+
+    //TapTarget
+    implementation 'com.getkeepsafe.taptargetview:taptargetview:1.11.0'
 
 }
 apply plugin: 'com.google.gms.google-services'

@@ -7,15 +7,16 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -31,8 +32,13 @@ import com.aditya.remembermythings.R;
 import com.aditya.remembermythings.ViewHolder.ItemClickListener;
 import com.aditya.remembermythings.ViewHolder.ItemViewHolder;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.navigation.NavigationView;
@@ -55,6 +61,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import butterknife.BindView;
 import id.zelory.compressor.Compressor;
@@ -62,10 +69,10 @@ import id.zelory.compressor.Compressor;
 public class ItemViewActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    //InterstitialAd mInterstitialAd;
-    public int counter;
+    InterstitialAd mInterstitialAd;
+    int counter;
 
-    TextView txtFullName;
+    //TextView txtFullName;
     AppCompatImageView edtImage, viewFullImage;
     AppCompatButton btnSelect;
 
@@ -97,27 +104,66 @@ public class ItemViewActivity extends AppCompatActivity
     List<String> suggestList = new ArrayList<>();
     MaterialSearchBar materialSearchBar;
 
+    private AdView mAdView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_view);
 
-        AdView mAdView = findViewById(R.id.adView);
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+        mAdView = findViewById(R.id.adViewItemVIew);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
 
-//        //InterstitialAds
-//        mInterstitialAd = new InterstitialAd(this);
-//        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
-//        mInterstitialAd.loadAd(new AdRequest.Builder().build());
-//        mInterstitialAd.setAdListener(new AdListener() {
-//            @Override
-//            public void onAdClosed() {
-//                super.onAdClosed();
-//                //finish();
-//            }
-//        });
+        mAdView.setAdListener(new AdListener(){
+            @Override
+            public void onAdLoaded() {
+                Log.d("Banner Ad Test","Add Finished Loading");
+            }
+
+            @Override
+            public void onAdFailedToLoad(int i) {
+                Log.d("Banner Ad Test","Add Loading Failed");
+            }
+
+            @Override
+            public void onAdOpened() {
+                Log.d("Banner Ad Test","Add is Visible Now");
+            }
+        });
+
+        //InterstitialAds
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+        mInterstitialAd.loadAd(new AdRequest.Builder().addTestDevice("6426D767B1E24D6D246A9BA054283842").build());
+        mInterstitialAd.setAdListener(new AdListener() {
+            @Override
+            public void onAdClosed() {
+                // Load the next interstitial.
+               // mInterstitialAd.loadAd(new AdRequest.Builder().build());
+            }
+
+            @Override
+            public void onAdLoaded() {
+                Log.d("Interstitial Ad Test","Add Finished Loading");
+            }
+
+            @Override
+            public void onAdFailedToLoad(int i) {
+                Log.d("Interstitial Ad Test","Add Loading Failed");
+            }
+
+            @Override
+            public void onAdOpened() {
+                Log.d("Interstitial Ad Test","Add is Visible Now");
+            }
+        });
 
 //        int random = ThreadLocalRandom.current().nextInt(5, 15);
 //        int newRandom = random * 1000;
@@ -176,7 +222,7 @@ public class ItemViewActivity extends AppCompatActivity
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 //when user type , it will change suggestion list
 
-                List<String> suggest = new ArrayList<String>();
+                List<String> suggest = new ArrayList<>();
                 for (String search : suggestList) {
                     if (search.toLowerCase().contains(materialSearchBar.getText().toLowerCase())) {
                         suggest.add(search);
@@ -530,7 +576,35 @@ public class ItemViewActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
+        int random = ThreadLocalRandom.current().nextInt(7, 10);
+        int newRandom = random * 1000;
+        //Toast.makeText(ItemViewActivity.this, "Item View Add Back pressed", Toast.LENGTH_SHORT).show();
+        new CountDownTimer(newRandom, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+
+            }
+
+            @Override
+            public void onFinish() {
+                //Toast.makeText(ItemViewActivity.this, "Main View Add", Toast.LENGTH_SHORT).show();
+
+                showInterstitial();
+            }
+        }.start();
         super.onBackPressed();
 
+    }
+
+    public void showInterstitial() {
+        if (mInterstitialAd.isLoaded()) {
+            if(counter<2){
+                mInterstitialAd.show();
+                counter++;
+            }
+
+        } else {
+            Log.d("InterstitalAd", "The interstitial wasn't loaded yet.");
+        }
     }
 }

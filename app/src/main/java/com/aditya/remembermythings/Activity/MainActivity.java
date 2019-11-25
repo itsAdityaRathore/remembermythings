@@ -5,13 +5,16 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,10 +34,15 @@ import com.aditya.remembermythings.Model.User;
 import com.aditya.remembermythings.R;
 import com.aditya.remembermythings.ViewHolder.ItemViewHolder;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.getkeepsafe.taptargetview.TapTarget;
+import com.getkeepsafe.taptargetview.TapTargetView;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
@@ -67,7 +75,9 @@ import io.reactivex.functions.Consumer;
 
 public class MainActivity extends AppCompatActivity {
 
-    InterstitialAd mInterstitialAd;
+    Boolean checkFirst;
+    SharedPreferences.Editor editor;
+
     public int counter = 0;
 
     RxPermission rxPermission;
@@ -100,6 +110,9 @@ public class MainActivity extends AppCompatActivity {
     Uri picUri;
     private static final int CAPTURE_IMAGE = 0;
 
+    private AdView mAdView;
+    private InterstitialAd mInterstitialAd;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,40 +121,79 @@ public class MainActivity extends AppCompatActivity {
         StrictMode.setVmPolicy(builder.build());
         rxPermission = RealRxPermission.getInstance(getApplication());
 
-        int random = ThreadLocalRandom.current().nextInt(10, 20);
-        int newRandom = random * 1000;
-
-
-        new CountDownTimer(newRandom, 1000) {
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
             @Override
-            public void onTick(long millisUntilFinished) {
-
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
             }
-
-            @Override
-            public void onFinish() {
-
-                if (counter < 2)
-                    showInterstitial();
-            }
-        }.start();
-
-        //Banner Ads
-        AdView mAdView = findViewById(R.id.adView);
+        });
+        mAdView = findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
+
+        mAdView.setAdListener(new AdListener(){
+            @Override
+            public void onAdLoaded() {
+                Log.d("Banner Ad Test","Add Finished Loading");
+            }
+
+            @Override
+            public void onAdFailedToLoad(int i) {
+                Log.d("Banner Ad Test","Add Loading Failed");
+            }
+
+            @Override
+            public void onAdOpened() {
+                Log.d("Banner Ad Test","Add is Visible Now");
+            }
+        });
 
         //InterstitialAds
         mInterstitialAd = new InterstitialAd(this);
         mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        mInterstitialAd.loadAd(new AdRequest.Builder().addTestDevice("6426D767B1E24D6D246A9BA054283842").build());
         mInterstitialAd.setAdListener(new AdListener() {
+
             @Override
             public void onAdClosed() {
-                super.onAdClosed();
-                //finish();
+                // Load the next interstitial.
+                mInterstitialAd.loadAd(new AdRequest.Builder().build());
+            }
+
+
+            @Override
+            public void onAdLoaded() {
+                Log.d("Interstitial Ad Test","Add Finished Loading");
+            }
+
+            @Override
+            public void onAdFailedToLoad(int i) {
+                Log.d("Interstitial Ad Test","Add Loading Failed");
+            }
+
+            @Override
+            public void onAdOpened() {
+                Log.d("Interstitial Ad Test","Add is Visible Now");
             }
         });
+
+//        int random = ThreadLocalRandom.current().nextInt(10, 20);
+//        int newRandom = random * 1000;
+//
+//
+//        new CountDownTimer(newRandom, 1000) {
+//            @Override
+//            public void onTick(long millisUntilFinished) {
+//
+//            }
+//
+//            @Override
+//            public void onFinish() {
+//
+//                if (counter < 2)
+//                    showInterstitial();
+//            }
+//        }.start();
+
 
         compositeDisposable.add(rxPermission.requestEach(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .subscribe(new Consumer<Permission>() {
@@ -170,14 +222,59 @@ public class MainActivity extends AppCompatActivity {
 
         //INIT paper
         Paper.init(this);
+
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        checkFirst = pref.getBoolean("first_start",true);
+        editor = pref.edit();
+
+        if(checkFirst!=Boolean.FALSE){
+            TapTargetView.showFor(this,                 // `this` is an Activity
+                    TapTarget.forView(findViewById(R.id.addProperty), "Add new item", "Click here to add new items you want to remember")
+                            // All options below are optional
+                            .outerCircleColor(R.color.primary)      // Specify a color for the outer circle
+                            .outerCircleAlpha(0.96f)            // Specify the alpha amount for the outer circle
+                            .targetCircleColor(R.color.white)   // Specify a color for the target circle
+                            .titleTextSize(25)                  // Specify the size (in sp) of the title text
+                            .titleTextColor(R.color.white)      // Specify the color of the title text
+                            .descriptionTextSize(18)            // Specify the size (in sp) of the description text
+                            .descriptionTextColor(R.color.white)  // Specify the color of the description text
+                            .textColor(R.color.white)            // Specify a color for both the title and description text
+                            .textTypeface(Typeface.SANS_SERIF)  // Specify a typeface for the text
+                            .dimColor(R.color.black)            // If set, will dim behind the view with 30% opacity of the given color
+                            .drawShadow(true)                   // Whether to draw a drop shadow or not
+                            .cancelable(true)                  // Whether tapping outside the outer circle dismisses the view
+                            .tintTarget(true)                   // Whether to tint the target view's color
+                            .transparentTarget(true)           // Specify whether the target is transparent (displays the content underneath)
+                            // Specify a custom drawable to draw as the target
+                            .targetRadius(65),                  // Specify the target radius (in dp)
+                    new TapTargetView.Listener() {          // The listener can listen for regular clicks, long clicks or cancels
+                        @Override
+                        public void onTargetClick(TapTargetView view) {
+                            super.onTargetClick(view);      // This call is optional
+                            showDialog();
+                            view.dismiss(true);
+                        }
+                    });
+            //editor.putBoolean("first_start", false).commit();
+        }
+
+
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 
     public void showInterstitial() {
-        if (mInterstitialAd.isLoaded()) {
-            counter++;
+        if(counter<2){
             mInterstitialAd.show();
-        } else {
-            //finish();
+            counter++;
+        }else {
+            Log.d("InterstitalAd", "The interstitial wasn't loaded yet.");
         }
     }
 
@@ -302,9 +399,26 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 if (dataSnapshot.exists()) {
+
+                                    int random = ThreadLocalRandom.current().nextInt(5, 15);
+                                    int newRandom = random * 1000;
+
+                                    new CountDownTimer(newRandom, 1000) {
+                                        @Override
+                                        public void onTick(long millisUntilFinished) {
+
+                                        }
+
+                                        @Override
+                                        public void onFinish() {
+                                            //Toast.makeText(MainActivity.this, "Main View Add", Toast.LENGTH_SHORT).show();
+
+                                            showInterstitial();
+                                        }
+                                    }.start();
+
                                     Intent intent = new Intent(getApplicationContext(), ItemViewActivity.class);
                                     intent.putExtra("CategoryId", myAdapter);
-
                                     startActivity(intent);
                                 } else {
                                     Toast.makeText(MainActivity.this, "No Items to View", Toast.LENGTH_SHORT).show();
@@ -316,20 +430,15 @@ public class MainActivity extends AppCompatActivity {
 
                             }
                         });
+
                     } else if (finalI == 2) {
 
                         Intent settingIntent = new Intent(MainActivity.this, SettingsActivity.class);
                         startActivity(settingIntent);
                     } else if (finalI == 3) {
                         //delete remember user after logout
-                        Paper.book().destroy();
 
-                        //show ads
-                        showInterstitial();
-
-                        Intent logIn = new Intent(MainActivity.this, LoginActivity.class);
-                        logIn.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(logIn);
+                        showLogoutDialog();
                     }
                 }
             });
@@ -371,6 +480,35 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(MainActivity.this, "Name cannot be Empty..!!!", Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+        alertDialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        alertDialog.show();
+    }
+
+    private void showLogoutDialog() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
+        alertDialog.setTitle("Sure want to log out?");
+
+        //Set Button
+        alertDialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+
+                //show ads
+                showInterstitial();
+                counter=0;
+                Paper.book().destroy();
+                Intent logIn = new Intent(MainActivity.this, LoginActivity.class);
+                logIn.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(logIn);
 
             }
         });
@@ -497,6 +635,7 @@ public class MainActivity extends AppCompatActivity {
                                     //Snackbar.make(drawer,"New Item "+newItem.getName()+" was added", Snackbar.LENGTH_SHORT).show();
                                     Snackbar.make(findViewById(R.id.root_layout), "New Item " + newItem.getName() + " was added", Snackbar.LENGTH_LONG).show();
                                     actualImage.delete();
+
                                     //Toast.makeText(MainActivity.this, "New Item " + newItem.getName() + " was added", Toast.LENGTH_SHORT).show();
                                 }
                             }
@@ -510,11 +649,76 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.makeText(MainActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
                             }
                         });
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
             Toast.makeText(this, "Please Click the image first..!!!", Toast.LENGTH_LONG).show();
+        }
+        if(checkFirst!=Boolean.FALSE){
+            TapTargetView.showFor(this,                 // `this` is an Activity
+                    TapTarget.forView(findViewById(R.id.viewProperty), "View Items", "Click here to view items you added.")
+                            // All options below are optional
+                            .outerCircleColor(R.color.primary)      // Specify a color for the outer circle
+                            .outerCircleAlpha(0.96f)            // Specify the alpha amount for the outer circle
+                            .targetCircleColor(R.color.white)   // Specify a color for the target circle
+                            .titleTextSize(25)                  // Specify the size (in sp) of the title text
+                            .titleTextColor(R.color.white)      // Specify the color of the title text
+                            .descriptionTextSize(18)            // Specify the size (in sp) of the description text
+                            .descriptionTextColor(R.color.white)  // Specify the color of the description text
+                            .textColor(R.color.white)            // Specify a color for both the title and description text
+                            .textTypeface(Typeface.SANS_SERIF)  // Specify a typeface for the text
+                            .dimColor(R.color.black)            // If set, will dim behind the view with 30% opacity of the given color
+                            .drawShadow(true)                   // Whether to draw a drop shadow or not
+                            .cancelable(true)                  // Whether tapping outside the outer circle dismisses the view
+                            .tintTarget(true)                   // Whether to tint the target view's color
+                            .transparentTarget(true)           // Specify whether the target is transparent (displays the content underneath)
+                            // Specify a custom drawable to draw as the target
+                            .targetRadius(65),                  // Specify the target radius (in dp)
+                    new TapTargetView.Listener() {          // The listener can listen for regular clicks, long clicks or cancels
+                        @Override
+                        public void onTargetClick(TapTargetView view) {
+                            super.onTargetClick(view);      // This call is optional
+                            adapter = new FirebaseRecyclerAdapter<Items, ItemViewHolder>(
+                                    Items.class,
+                                    R.layout.view_item,
+                                    ItemViewHolder.class,
+                                    items) {
+
+                                @Override
+                                protected void populateViewHolder(ItemViewHolder itemViewHolder, Items items, int i) {
+                                    itemViewHolder.txtItemName.setText(items.getName());
+                                    Picasso.get().load(items.getImage()).into(itemViewHolder.imageView);
+                                    myAdapter = adapter.getRef(i).getKey();
+                                }
+                            };
+
+
+                            DatabaseReference table_user = userItem;
+
+                            table_user.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    if (dataSnapshot.exists()) {
+                                        Intent intent = new Intent(getApplicationContext(), ItemViewActivity.class);
+                                        intent.putExtra("CategoryId", myAdapter);
+
+                                        startActivity(intent);
+                                    } else {
+                                        Toast.makeText(MainActivity.this, "No Items to View", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
+                            view.dismiss(true);
+                        }
+                    });
+            editor.putBoolean("first_start", false).commit();
         }
     }
 

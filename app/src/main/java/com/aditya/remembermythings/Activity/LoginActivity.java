@@ -133,7 +133,7 @@ public class LoginActivity extends AppCompatActivity {
                             intent.putExtra("uPhone", phone);
                             startActivity(intent);
                             Common.currentUser = user;
-                            //finish();
+                            finish();
 
                         } else {
                             Toast.makeText(LoginActivity.this, "Wrong Password !!!", Toast.LENGTH_SHORT).show();
@@ -168,11 +168,7 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin.setEnabled(true);
 
         if (Common.isConnectedToInternet(getBaseContext())) {
-            //save user& password
-            if (btnChkbox.isChecked()) {
-                Paper.book().write(Common.USER_KEY, inputPhone.getText().toString());
-                Paper.book().write(Common.PWD_KEY, inputPassword.getText().toString());
-            }
+
 
             final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this,
                     R.style.AppTheme_Dark_Dialog);
@@ -207,6 +203,12 @@ public class LoginActivity extends AppCompatActivity {
                             intent.putExtra("uPhone", phone);
                             startActivity(intent);
                             Common.currentUser = user;
+                            //save user& password
+                            if (btnChkbox.isChecked()) {
+                                Paper.book().write(Common.USER_KEY, inputPhone.getText().toString());
+                                Paper.book().write(Common.PWD_KEY, inputPassword.getText().toString());
+                            }
+                            progressDialog.dismiss();
                             finish();
 
                         } else {
@@ -230,12 +232,12 @@ public class LoginActivity extends AppCompatActivity {
                     new Runnable() {
                         public void run() {
                             // On complete call either onLoginSuccess or onLoginFailed
-                            progressDialog.dismiss();
                             onLoginSuccess();
                             // onLoginFailed();
 
                         }
                     }, 3000);
+
         } else {
             Toast.makeText(LoginActivity.this, "Please check your connection !!", Toast.LENGTH_SHORT).show();
             return;
@@ -277,7 +279,7 @@ public class LoginActivity extends AppCompatActivity {
 
     public void onLoginSuccess() {
         btnLogin.setEnabled(true);
-        finish();
+        //finish();
     }
 
     public void onLoginFailed() {
@@ -331,28 +333,32 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 //Check if user is available
-                table_user.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
+                if (edtPhone.getText() != null || inputPassword.getText() != null){
+                    table_user.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
 
-                        if (dataSnapshot.child(edtPhone.getText().toString()).exists()) {
+                            if (dataSnapshot.child(edtPhone.getText().toString()).exists()) {
 
-                            User user = dataSnapshot.child(edtPhone.getText().toString()).getValue(User.class);
+                                User user = dataSnapshot.child(edtPhone.getText().toString()).getValue(User.class);
 
-                            if (user.getuSecQues().equals(edtSecureCode.getText().toString()))
-                                Toast.makeText(LoginActivity.this, "Your password : " + user.getuPassword(), Toast.LENGTH_LONG).show();
-                            else
-                                Toast.makeText(LoginActivity.this, "Wrong secure code !!", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(LoginActivity.this, "User Doesn't exist!!!", Toast.LENGTH_SHORT).show();
+                                if (user.getuSecQues().equals(edtSecureCode.getText().toString()))
+                                    Toast.makeText(LoginActivity.this, "Your password : " + user.getuPassword(), Toast.LENGTH_LONG).show();
+                                else
+                                    Toast.makeText(LoginActivity.this, "Wrong secure code !!", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(LoginActivity.this, "User Doesn't exist!!!", Toast.LENGTH_SHORT).show();
+                            }
+
+
                         }
-                    }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                    }
-                });
+                        }
+                    });
+                }
             }
         });
         builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {

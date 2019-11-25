@@ -2,6 +2,7 @@ package com.aditya.remembermythings.Activity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -114,17 +115,16 @@ public class SignupActivity extends AppCompatActivity {
                         table_user.setValue(user);
                         user.setuPhone(mobile);
 
-//                        SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
-//                        Boolean firstStart = prefs.getBoolean("first_start", true);
-
-
 
                         Intent intent = new Intent(getApplicationContext(), FirstStartActivity.class);
                         Common.currentUser = user;
                         intent.putExtra("uPhone",mobile);
                         startActivity(intent);
 
-                        finish();
+                        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = pref.edit();
+                        editor.putBoolean("first_start", true).commit();
+                        //finish();
                         //Toast.makeText(SignupActivity.this, "Sign Up Successful", Toast.LENGTH_SHORT).show();
 
                     }
@@ -174,7 +174,6 @@ public class SignupActivity extends AppCompatActivity {
 
     public void onSignupFailed() {
         Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
-
         _signupButton.setEnabled(true);
     }
 

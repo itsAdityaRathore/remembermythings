@@ -32,7 +32,7 @@
                 android:layout_alignParentStart="true"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginStart="0dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="15dp"
                 android:src="@drawable/logo3" />
 
         </RelativeLayout>
@@ -41,8 +41,9 @@
         <GridLayout
             android:id="@+id/mainGrid"
             android:layout_width="fill_parent"
-            android:layout_height="400dp"
+            android:layout_height="350dp"
             android:layout_weight="4"
+            android:layout_gravity="fill_horizontal|fill_vertical|center"
             android:alignmentMode="alignMargins"
             android:columnCount="2"
             android:columnOrderPreserved="false"
@@ -72,6 +73,7 @@
                     android:textAlignment="center">
 
                     <ImageView
+                        android:id="@+id/addProperty"
                         android:layout_width="90dp"
                         android:layout_height="90dp"
                         android:layout_gravity="center_horizontal"
@@ -111,6 +113,7 @@
                     android:orientation="vertical">
 
                     <ImageView
+                        android:id="@+id/viewProperty"
                         android:layout_width="90dp"
                         android:layout_height="90dp"
                         android:layout_gravity="center_horizontal"
@@ -222,7 +225,7 @@
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
         ads:adSize="BANNER"
-        ads:adUnitId="ca-app-pub-3940256099942544/6300978111">
+        ads:adUnitId="@string/BannerMain">
     </com.google.android.gms.ads.AdView>
 
 </RelativeLayout>

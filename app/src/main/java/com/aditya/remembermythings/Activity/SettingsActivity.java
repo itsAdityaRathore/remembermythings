@@ -1,11 +1,16 @@
 package com.aditya.remembermythings.Activity;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,8 +18,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.aditya.remembermythings.Common.Common;
 import com.aditya.remembermythings.Model.User;
 import com.aditya.remembermythings.R;
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -28,13 +37,15 @@ public class SettingsActivity extends AppCompatActivity {
 
     private static final String TAG = "SettingsActivity";
 
-
+    AdView mAdView;
 
     @BindView(R.id.txtOldPass) EditText oldPassword;
     @BindView(R.id.txtNewPass) EditText newPassword;
     @BindView(R.id.txtConfirmPass) EditText confirmPassword;
     @BindView(R.id.btn_changePassword) Button changePassword;
     @BindView(R.id.changePassGrid) GridLayout changePassGrid;
+    @BindView(R.id.btn_share) Button shareAppBtn;
+    @BindView(R.id.versionNumber) TextView verNumber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,10 +53,31 @@ public class SettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_settings);
         ButterKnife.bind(this);
 
-        //Banner Ads
-        AdView mAdView = findViewById(R.id.adViewSettings);
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+        mAdView = findViewById(R.id.adViewSettings);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
+
+        mAdView.setAdListener(new AdListener(){
+            @Override
+            public void onAdLoaded() {
+                Log.d("Banner Ad Test","Add Finished Loading");
+            }
+
+            @Override
+            public void onAdFailedToLoad(int i) {
+                Log.d("Banner Ad Test","Add Loading Failed");
+            }
+
+            @Override
+            public void onAdOpened() {
+                Log.d("Banner Ad Test","Add is Visible Now");
+            }
+        });
 
         changePassword.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -53,6 +85,25 @@ public class SettingsActivity extends AppCompatActivity {
                 changePassword();
             }
         });
+
+        shareAppBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                shareApp(getApplicationContext());
+            }
+        });
+
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            String version = pInfo.versionName;
+            int versionCode = pInfo.versionCode;
+            verNumber.setText("Version : " + version);
+            Log.d("MyApp", "Version Name : "+version + "\n Version Code : "+versionCode);
+
+        } catch(PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            Log.d("MyApp", "PackageManager Catch : "+e.toString());
+        }
 
     }
 
@@ -99,6 +150,9 @@ public class SettingsActivity extends AppCompatActivity {
 
     }
 
+
+
+
     public boolean validate() {
         boolean valid = true;
 
@@ -127,5 +181,19 @@ public class SettingsActivity extends AppCompatActivity {
             confirmPassword.setError(null);
         }
         return valid;
+    }
+
+    private void shareApp(Context context) {
+
+        int applicationNameId = context.getApplicationInfo().labelRes;
+        final String appPackageName = context.getPackageName();
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.setType("text/plain");
+        i.putExtra(Intent.EXTRA_SUBJECT, getString(applicationNameId));
+        String text = "Install this cool application : ";
+        String link = "https://play.google.com/store/apps/details?id=" + appPackageName;
+        i.putExtra(Intent.EXTRA_TEXT, text + " " + link);
+        startActivity(Intent.createChooser(i, "Share link:"));
+
     }
 }

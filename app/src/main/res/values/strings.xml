@@ -3,4 +3,13 @@
 
     <string name="forgot_pwd">Forgot Password ?</string>
     <string name="action_settings">Settings</string>
+
+    <!--<string name="BannerMain">ca-app-pub-5973465911931412/6731570283</string>
+    <string name="BannerInst">ca-app-pub-5973465911931412/1832211791</string>
+    <string name="BannerSetting">ca-app-pub-5973465911931412/6731570283</string>-->
+
+    <string name="BannerMain">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="BannerInst">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="BannerSetting">ca-app-pub-3940256099942544/6300978111</string>
+
 </resources>
