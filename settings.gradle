@@ -1,1 +1,1 @@
-include ':app', ':googleads-mobile-android-native-templates-master'
+include ':app', ':googleads-mobile-android-native-templates-master', ':nativetemplates', ':NativeTemplatesAndroid-1.0.0'

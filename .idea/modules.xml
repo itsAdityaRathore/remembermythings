@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/NativeTemplatesAndroid-1.0.0/NativeTemplatesAndroid-1.0.0.iml" filepath="$PROJECT_DIR$/NativeTemplatesAndroid-1.0.0/NativeTemplatesAndroid-1.0.0.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/googleads-mobile-android-native-templates-master/googleads-mobile-android-native-templates-master.iml" filepath="$PROJECT_DIR$/googleads-mobile-android-native-templates-master/googleads-mobile-android-native-templates-master.iml" />
+      <module fileurl="file://$PROJECT_DIR$/nativetemplates/nativetemplates.iml" filepath="$PROJECT_DIR$/nativetemplates/nativetemplates.iml" />
       <module fileurl="file://$PROJECT_DIR$/remembermythings.iml" filepath="$PROJECT_DIR$/remembermythings.iml" />
     </modules>
   </component>

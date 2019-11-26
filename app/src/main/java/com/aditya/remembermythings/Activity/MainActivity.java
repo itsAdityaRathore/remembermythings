@@ -149,8 +149,8 @@ public class MainActivity extends AppCompatActivity {
 
         //InterstitialAds
         mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
-        mInterstitialAd.loadAd(new AdRequest.Builder().addTestDevice("6426D767B1E24D6D246A9BA054283842").build());
+        mInterstitialAd.setAdUnitId(String.valueOf(R.string.InterstitialMain));
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
         mInterstitialAd.setAdListener(new AdListener() {
 
             @Override

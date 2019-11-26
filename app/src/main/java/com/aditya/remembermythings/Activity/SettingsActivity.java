@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,14 +15,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.aditya.remembermythings.Common.Common;
 import com.aditya.remembermythings.Model.User;
 import com.aditya.remembermythings.R;
+import com.google.android.ads.nativetemplates.NativeTemplateStyle;
+import com.google.android.ads.nativetemplates.TemplateView;
 import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.formats.UnifiedNativeAd;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.firebase.database.DataSnapshot;
@@ -104,6 +110,28 @@ public class SettingsActivity extends AppCompatActivity {
             e.printStackTrace();
             Log.d("MyApp", "PackageManager Catch : "+e.toString());
         }
+
+        ColorDrawable colorDrawable = new ColorDrawable(ContextCompat.getColor(this, R.color.white));
+
+        MobileAds.initialize(this, "ca-app-pub-5973465911931412~6787410607");
+        AdLoader adLoader = new AdLoader.Builder(this, String.valueOf(R.string.NativeSetting))
+                .forUnifiedNativeAd(new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
+                    @Override
+                    public void onUnifiedNativeAdLoaded(UnifiedNativeAd unifiedNativeAd) {
+                        NativeTemplateStyle styles = new
+                                NativeTemplateStyle.Builder().withMainBackgroundColor(colorDrawable).build();
+
+                        TemplateView template = findViewById(R.id.my_template);
+                        template.setStyles(styles);
+                        template.setNativeAd(unifiedNativeAd);
+
+                    }
+                })
+                .build();
+
+        adLoader.loadAd(new AdRequest.Builder().build());
+
+
 
     }
 

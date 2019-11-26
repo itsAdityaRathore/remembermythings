@@ -8,8 +8,8 @@ android {
         applicationId 'com.aditya.remembermythings'
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
+        versionCode 4
+        versionName "1.0.2"
     }
     buildTypes {
         release {
@@ -22,6 +22,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    repositories {
+        jcenter()
+
+        maven {
+            url  "https://adcolony.bintray.com/AdColony"
+        }
+    }
+
 }
 
 dependencies {
@@ -61,8 +70,12 @@ dependencies {
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
 
     //admob
+    implementation project(':NativeTemplatesAndroid-1.0.0')
     implementation 'com.google.android.gms:play-services-ads:18.3.0'
-
+    //AdColony
+    implementation 'com.google.ads.mediation:adcolony:4.1.0.0'
+    //UnityAds
+    implementation 'com.google.ads.mediation:unity:3.3.0.0'
 
     //lottieAnimaition
     implementation 'com.airbnb.android:lottie:3.2.2'
