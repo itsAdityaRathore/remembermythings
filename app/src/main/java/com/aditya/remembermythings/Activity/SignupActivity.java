@@ -182,7 +182,7 @@ public class SignupActivity extends AppCompatActivity {
 
         String name = _nameText.getText().toString();
      //   String address = _addressText.getText().toString();
-      //  String email = _emailText.getText().toString();
+        String secQues = _secQues.getText().toString();
         String mobile = _mobileText.getText().toString();
         String password = _passwordText.getText().toString();
         String reEnterPassword = _reEnterPasswordText.getText().toString();
@@ -228,6 +228,13 @@ public class SignupActivity extends AppCompatActivity {
             valid = false;
         } else {
             _reEnterPasswordText.setError(null);
+        }
+
+        if (secQues.isEmpty() || secQues.length() < 4) {
+            _secQues.setError("Enter Favourite Food");
+            valid = false;
+        } else {
+            _secQues.setError(null);
         }
 
         return valid;

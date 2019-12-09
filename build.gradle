@@ -8,7 +8,6 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.0'
         classpath 'com.jakewharton:butterknife-gradle-plugin:8.8.1'
-
         classpath 'com.google.gms:google-services:4.2.0'
     }
 }
@@ -18,5 +17,6 @@ allprojects {
         jcenter()
         google()
         maven { url "https://jitpack.io" }
+        maven { url  "https://adcolony.bintray.com/AdColony" }
     }
 }

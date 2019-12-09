@@ -70,7 +70,7 @@ public class ItemViewActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     InterstitialAd mInterstitialAd;
-    int counter;
+    int counter = 1;
 
     //TextView txtFullName;
     AppCompatImageView edtImage, viewFullImage;
@@ -118,30 +118,30 @@ public class ItemViewActivity extends AppCompatActivity
             }
         });
         mAdView = findViewById(R.id.adViewItemVIew);
-        AdRequest adRequest = new AdRequest.Builder().build();
+        AdRequest adRequest = new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build();
         mAdView.loadAd(adRequest);
 
         mAdView.setAdListener(new AdListener(){
             @Override
             public void onAdLoaded() {
-                Log.d("Banner Ad Test","Add Finished Loading");
+                Log.d("IV Banner Ad Test", "Add Finished Loading");
             }
 
             @Override
             public void onAdFailedToLoad(int i) {
-                Log.d("Banner Ad Test","Add Loading Failed");
+                Log.d("IV Banner Ad Test", "Add Loading Failed");
             }
 
             @Override
             public void onAdOpened() {
-                Log.d("Banner Ad Test","Add is Visible Now");
+                Log.d("IV Banner Ad Test", "Add is Visible Now");
             }
         });
 
         //InterstitialAds
         mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId(String.valueOf(R.string.InterstitialItemView));
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        mInterstitialAd.setAdUnitId("ca-app-pub-5973465911931412/9703635404");
+        mInterstitialAd.loadAd(new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build());
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
             public void onAdClosed() {
@@ -151,17 +151,17 @@ public class ItemViewActivity extends AppCompatActivity
 
             @Override
             public void onAdLoaded() {
-                Log.d("Interstitial Ad Test","Add Finished Loading");
+                Log.d("IV Interstitial Ad Test", "Add Finished Loading");
             }
 
             @Override
             public void onAdFailedToLoad(int i) {
-                Log.d("Interstitial Ad Test","Add Loading Failed");
+                Log.d("IV Interstitial Ad Test", "Add Loading Failed");
             }
 
             @Override
             public void onAdOpened() {
-                Log.d("Interstitial Ad Test","Add is Visible Now");
+                Log.d("IV Interstitial Ad Test", "Add is Visible Now");
             }
         });
 

@@ -106,22 +106,22 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
+            android:id="@+id/nativad"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingHorizontal="10dp"
+            android:visibility="gone"
             tools:context=".MainActivity"
-            tools:showIn="@layout/activity_settings" >
+            tools:showIn="@layout/activity_settings">
 
             <!--  This is your template view -->
             <com.google.android.ads.nativetemplates.TemplateView
                 android:id="@+id/my_template"
-                app:gnt_template_type="@layout/gnt_small_template_view"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                app:gnt_template_type="@layout/gnt_small_template_view" />
 
         </LinearLayout>
-
 
 
         <LinearLayout
@@ -165,7 +165,6 @@
         </LinearLayout>
 
 
-
     </LinearLayout>
 
     <TextView
@@ -188,7 +187,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_gravity="center_horizontal|bottom"
-        ads:adSize="BANNER"
+        ads:adSize="SMART_BANNER"
         ads:adUnitId="@string/BannerSetting">
 
     </com.google.android.gms.ads.AdView>

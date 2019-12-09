@@ -44,12 +44,15 @@ public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.btn_login)
     AppCompatButton btnLogin;
     @BindView(R.id.link_signup)
-    TextView linkSignup;
+    AppCompatButton linkSignup;
     @BindView(R.id.txtForgotPwd)
     TextView textFgtPwd;
 
     @BindView(R.id.ckbRemember)
     AppCompatCheckBox btnChkbox;
+
+    FirebaseDatabase database;
+    DatabaseReference table_user;
 
 
     @Override
@@ -60,6 +63,10 @@ public class LoginActivity extends AppCompatActivity {
         inputPhone.clearFocus();
         inputPhone.setFocusableInTouchMode(true);
 
+        //Init Firebase
+
+        database = FirebaseDatabase.getInstance();
+        table_user = database.getReference("Users");
 
         //Init Paper to store user pass to android
         Paper.init(this);
@@ -111,16 +118,17 @@ public class LoginActivity extends AppCompatActivity {
             progressDialog.setIndeterminate(true);
             progressDialog.setMessage("Logging in..");
             progressDialog.show();
-            //Init Firebase
 
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            final DatabaseReference table_user = database.getReference("Users");
+//            //Init Firebase
+//
+//            FirebaseDatabase database = FirebaseDatabase.getInstance();
+//            final DatabaseReference table_user = database.getReference("Users");
 
             table_user.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
 
-                    //check if user not exist in database
+//                    //check if user not exist in database
                     if (dataSnapshot.child(phone).exists()) {
                         //get user information
                         //mDialog.dismiss();
@@ -132,11 +140,13 @@ public class LoginActivity extends AppCompatActivity {
                             Intent intent = new Intent(getBaseContext(), MainActivity.class);
                             intent.putExtra("uPhone", phone);
                             startActivity(intent);
+                            progressDialog.dismiss();
                             Common.currentUser = user;
                             finish();
 
                         } else {
                             Toast.makeText(LoginActivity.this, "Wrong Password !!!", Toast.LENGTH_SHORT).show();
+                            progressDialog.dismiss();
                         }
                     } else {
                         //mDialog.dismiss();
@@ -181,11 +191,6 @@ public class LoginActivity extends AppCompatActivity {
 
             // TODO: Implement your own authentication logic here.
 
-            //Init Firebase
-
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            final DatabaseReference table_user = database.getReference("Users");
-
             table_user.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -213,6 +218,7 @@ public class LoginActivity extends AppCompatActivity {
 
                         } else {
                             Toast.makeText(LoginActivity.this, "Wrong Password !!!", Toast.LENGTH_SHORT).show();
+                            progressDialog.dismiss();
                         }
                     } else {
                         //mDialog.dismiss();

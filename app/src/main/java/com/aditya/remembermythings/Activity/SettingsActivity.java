@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +28,7 @@ import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.formats.NativeAdOptions;
 import com.google.android.gms.ads.formats.UnifiedNativeAd;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
@@ -65,23 +67,23 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
         mAdView = findViewById(R.id.adViewSettings);
-        AdRequest adRequest = new AdRequest.Builder().build();
+        AdRequest adRequest = new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build();
         mAdView.loadAd(adRequest);
 
         mAdView.setAdListener(new AdListener(){
             @Override
             public void onAdLoaded() {
-                Log.d("Banner Ad Test","Add Finished Loading");
+                Log.d("ST Banner Ad Test", "Add Finished Loading");
             }
 
             @Override
             public void onAdFailedToLoad(int i) {
-                Log.d("Banner Ad Test","Add Loading Failed");
+                Log.d("ST Banner Ad Test", "Add Loading Failed");
             }
 
             @Override
             public void onAdOpened() {
-                Log.d("Banner Ad Test","Add is Visible Now");
+                Log.d("ST Banner Ad Test", "Add is Visible Now");
             }
         });
 
@@ -114,26 +116,53 @@ public class SettingsActivity extends AppCompatActivity {
         ColorDrawable colorDrawable = new ColorDrawable(ContextCompat.getColor(this, R.color.white));
 
         MobileAds.initialize(this, "ca-app-pub-5973465911931412~6787410607");
-        AdLoader adLoader = new AdLoader.Builder(this, String.valueOf(R.string.NativeSetting))
+//        AdLoader adLoader = new AdLoader.Builder(this, "ca-app-pub-5973465911931412/9836918220")
+//                .forUnifiedNativeAd(new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
+//                    @Override
+//                    public void onUnifiedNativeAdLoaded(UnifiedNativeAd unifiedNativeAd) {
+//                        NativeTemplateStyle styles = new
+//                                NativeTemplateStyle.Builder().withMainBackgroundColor(colorDrawable).build();
+//
+//                        TemplateView template = findViewById(R.id.my_template);
+//                        template.setStyles(styles);
+//                        template.setNativeAd(unifiedNativeAd);
+//
+//                    }
+//                })
+//                .build();
+//
+//        adLoader.loadAd(new AdRequest.Builder().build());
+        LinearLayout NativlinearLayout = findViewById(R.id.nativad);
+        AdLoader adLoader = new AdLoader.Builder(this, "ca-app-pub-5973465911931412/8599610756")
                 .forUnifiedNativeAd(new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
                     @Override
                     public void onUnifiedNativeAdLoaded(UnifiedNativeAd unifiedNativeAd) {
+
+                        NativlinearLayout.setVisibility(View.VISIBLE);
                         NativeTemplateStyle styles = new
                                 NativeTemplateStyle.Builder().withMainBackgroundColor(colorDrawable).build();
 
                         TemplateView template = findViewById(R.id.my_template);
                         template.setStyles(styles);
                         template.setNativeAd(unifiedNativeAd);
-
                     }
                 })
+                .withAdListener(new AdListener() {
+                    @Override
+                    public void onAdFailedToLoad(int errorCode) {
+                        // Handle the failure by logging, altering the UI, and so on.
+                    }
+                })
+                .withNativeAdOptions(new NativeAdOptions.Builder()
+                        // Methods in the NativeAdOptions.Builder class can be
+                        // used here to specify individual options settings.
+                        .build())
                 .build();
 
-        adLoader.loadAd(new AdRequest.Builder().build());
-
-
+        adLoader.loadAd(new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build());
 
     }
+
 
     private void changePassword() {
         Log.d(TAG, "Change Password");

@@ -9,13 +9,13 @@
     <string name="BannerSetting">ca-app-pub-5973465911931412/9352281619</string>
     <string name="InterstitialMain">ca-app-pub-5973465911931412/4652201857</string>
     <string name="InterstitialItemView">ca-app-pub-5973465911931412/9703635404</string>
-    <string name="NativeSetting">ca-app-pub-5973465911931412/9836918220</string>
+    <string name="NativeSetting">ca-app-pub-5973465911931412/8599610756</string>
 
    <!-- <string name="BannerMain">ca-app-pub-3940256099942544/6300978111</string>
     <string name="BannerInst">ca-app-pub-3940256099942544/6300978111</string>
     <string name="BannerSetting">ca-app-pub-3940256099942544/6300978111</string>
     <string name="InterstitialMain">ca-app-pub-3940256099942544/1033173712</string>
     <string name="InterstitialItemView">ca-app-pub-3940256099942544/1033173712</string>
-    <string name="NativeSetting">ca-app-pub-3940256099942544/2247696110</string>-->
-
+    <string name="NativeSetting">ca-app-pub-3940256099942544/2247696110</string>
+-->
 </resources>

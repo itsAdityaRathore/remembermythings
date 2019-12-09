@@ -2,6 +2,8 @@ package com.aditya.remembermythings.Activity;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -9,6 +11,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -19,23 +22,33 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.GridLayout;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.cardview.widget.CardView;
 
+import com.adcolony.sdk.AdColony;
+import com.adcolony.sdk.AdColonyAppOptions;
 import com.aditya.remembermythings.Common.Common;
 import com.aditya.remembermythings.Model.Items;
 import com.aditya.remembermythings.Model.User;
 import com.aditya.remembermythings.R;
+import com.aditya.remembermythings.UpdateCheck.UpdateHelper;
 import com.aditya.remembermythings.ViewHolder.ItemViewHolder;
+import com.applovin.sdk.AppLovinPrivacySettings;
+import com.applovin.sdk.AppLovinSdk;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.getkeepsafe.taptargetview.TapTarget;
 import com.getkeepsafe.taptargetview.TapTargetView;
+import com.google.ads.mediation.adcolony.AdColonyMediationAdapter;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -43,14 +56,17 @@ import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -73,7 +89,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUpdateCheckListener {
 
     Boolean checkFirst;
     SharedPreferences.Editor editor;
@@ -112,6 +128,9 @@ public class MainActivity extends AppCompatActivity {
 
     private AdView mAdView;
     private InterstitialAd mInterstitialAd;
+    ImageView bgImage, mainLogoImage;
+    Animation fromBottom;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,36 +140,61 @@ public class MainActivity extends AppCompatActivity {
         StrictMode.setVmPolicy(builder.build());
         rxPermission = RealRxPermission.getInstance(getApplication());
 
+        getNotificationFirebase();
+
+        fromBottom = AnimationUtils.loadAnimation(this, R.anim.from_bottom);
+
+//        bgImage = findViewById(R.id.bgImage);
+//        bgImage.animate().translationY(-830).setDuration(800).setStartDelay(300);
+        mainLogoImage = findViewById(R.id.mainLogoImage);
+        mainLogoImage.startAnimation(fromBottom);
+//        mainGrid = findViewById(R.id.mainGrid);
+//        mainGrid.startAnimation(fromBottom);
+
+        UpdateHelper.with(this).onUpdateCheck(this).check();
+
+        AppLovinSdk.initializeSdk(getApplicationContext());
+        boolean userHasProvidedConsentForDataCollection = false;// true if consent was obtained from the user, false if consent was not obtained from the user
+        AppLovinPrivacySettings.setHasUserConsent(userHasProvidedConsentForDataCollection, getApplicationContext());
+
+        AdColonyAppOptions appOptions = AdColonyMediationAdapter.getAppOptions();
+        appOptions.setGDPRConsentString("1");
+        appOptions.setGDPRRequired(true);
+
+        AdColony.configure(this,           // activity context
+                "app0c5f24e2a6fa46abb1",
+                "vza5fbba0f0486428ca2", "vz45785b98ca264fd1be"); // list of all your zones set up on the AdColony Dashboard
+
         MobileAds.initialize(this, new OnInitializationCompleteListener() {
             @Override
             public void onInitializationComplete(InitializationStatus initializationStatus) {
             }
         });
         mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
+        AdRequest adRequest = new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build();
         mAdView.loadAd(adRequest);
 
         mAdView.setAdListener(new AdListener(){
             @Override
             public void onAdLoaded() {
-                Log.d("Banner Ad Test","Add Finished Loading");
+                Log.d("MA Banner Ad Test", "Add Finished Loading");
             }
 
             @Override
             public void onAdFailedToLoad(int i) {
-                Log.d("Banner Ad Test","Add Loading Failed");
+                Log.d("MA Banner Ad Test", "Add Loading Failed");
             }
 
             @Override
             public void onAdOpened() {
-                Log.d("Banner Ad Test","Add is Visible Now");
+                Log.d("MA Banner Ad Test", "Add is Visible Now");
             }
         });
 
         //InterstitialAds
         mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId(String.valueOf(R.string.InterstitialMain));
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        mInterstitialAd.setAdUnitId("ca-app-pub-5973465911931412/4652201857");
+        mInterstitialAd.loadAd(new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build());
         mInterstitialAd.setAdListener(new AdListener() {
 
             @Override
@@ -162,38 +206,19 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onAdLoaded() {
-                Log.d("Interstitial Ad Test","Add Finished Loading");
+                Log.d("MA Interstitial Ad Test", "Add Finished Loading");
             }
 
             @Override
             public void onAdFailedToLoad(int i) {
-                Log.d("Interstitial Ad Test","Add Loading Failed");
+                Log.d("MA Interstitial Ad Test", "Add Loading Failed");
             }
 
             @Override
             public void onAdOpened() {
-                Log.d("Interstitial Ad Test","Add is Visible Now");
+                Log.d("MA Interstitial Ad Test", "Add is Visible Now");
             }
         });
-
-//        int random = ThreadLocalRandom.current().nextInt(10, 20);
-//        int newRandom = random * 1000;
-//
-//
-//        new CountDownTimer(newRandom, 1000) {
-//            @Override
-//            public void onTick(long millisUntilFinished) {
-//
-//            }
-//
-//            @Override
-//            public void onFinish() {
-//
-//                if (counter < 2)
-//                    showInterstitial();
-//            }
-//        }.start();
-
 
         compositeDisposable.add(rxPermission.requestEach(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .subscribe(new Consumer<Permission>() {
@@ -261,6 +286,26 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    }
+
+    private void getNotificationFirebase() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel_1 = new NotificationChannel("MyNotifications", "MyNotifications", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel_1);
+        }
+
+        FirebaseMessaging.getInstance().subscribeToTopic("normal")
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        String msg = "Successfull";
+                        if (!task.isSuccessful()) {
+                            msg = "Failed";
+                        }
+                        //Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     @Override
@@ -400,7 +445,7 @@ public class MainActivity extends AppCompatActivity {
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 if (dataSnapshot.exists()) {
 
-                                    int random = ThreadLocalRandom.current().nextInt(5, 15);
+                                    int random = ThreadLocalRandom.current().nextInt(15, 20);
                                     int newRandom = random * 1000;
 
                                     new CountDownTimer(newRandom, 1000) {
@@ -435,6 +480,7 @@ public class MainActivity extends AppCompatActivity {
 
                         Intent settingIntent = new Intent(MainActivity.this, SettingsActivity.class);
                         startActivity(settingIntent);
+
                     } else if (finalI == 3) {
                         //delete remember user after logout
 
@@ -722,4 +768,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onUpdateCheckListener(String urlApp) {
+        //create alert dialog
+        androidx.appcompat.app.AlertDialog alertDialog = new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("New Version Available")
+                .setMessage("Please update to latest vesion to get new features")
+                .setPositiveButton("UPDATE", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setData(Uri.parse("market://details?id=com.techyhacky.quotesadda"));
+                        startActivity(intent);
+                        //Toast.makeText(MainActivity.this, ""+urlApp, Toast.LENGTH_SHORT).show();
+                    }
+                }).setNegativeButton("CANCLE", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                }).create();
+        alertDialog.show();
+    }
 }
