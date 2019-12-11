@@ -8,9 +8,11 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -35,20 +37,14 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.cardview.widget.CardView;
 
-import com.adcolony.sdk.AdColony;
-import com.adcolony.sdk.AdColonyAppOptions;
-import com.aditya.remembermythings.Common.Common;
 import com.aditya.remembermythings.Model.Items;
-import com.aditya.remembermythings.Model.User;
 import com.aditya.remembermythings.R;
 import com.aditya.remembermythings.UpdateCheck.UpdateHelper;
 import com.aditya.remembermythings.ViewHolder.ItemViewHolder;
-import com.applovin.sdk.AppLovinPrivacySettings;
 import com.applovin.sdk.AppLovinSdk;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.getkeepsafe.taptargetview.TapTarget;
 import com.getkeepsafe.taptargetview.TapTargetView;
-import com.google.ads.mediation.adcolony.AdColonyMediationAdapter;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -83,6 +79,8 @@ import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
 import butterknife.BindView;
+import hotchemi.android.rate.AppRate;
+import hotchemi.android.rate.OnClickButtonListener;
 import id.zelory.compressor.Compressor;
 import io.paperdb.Paper;
 import io.reactivex.disposables.CompositeDisposable;
@@ -104,8 +102,6 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
 
     Items newItem;
 
-    //Add new menu Layout
-    //AppCompatEditText edtName;
     @BindView(R.id.edt_Name)
     EditText edtName;
 
@@ -135,91 +131,11 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
         rxPermission = RealRxPermission.getInstance(getApplication());
-
-        getNotificationFirebase();
-
-        fromBottom = AnimationUtils.loadAnimation(this, R.anim.from_bottom);
-
-//        bgImage = findViewById(R.id.bgImage);
-//        bgImage.animate().translationY(-830).setDuration(800).setStartDelay(300);
-        mainLogoImage = findViewById(R.id.mainLogoImage);
-        mainLogoImage.startAnimation(fromBottom);
-//        mainGrid = findViewById(R.id.mainGrid);
-//        mainGrid.startAnimation(fromBottom);
-
-        UpdateHelper.with(this).onUpdateCheck(this).check();
-
-        AppLovinSdk.initializeSdk(getApplicationContext());
-        boolean userHasProvidedConsentForDataCollection = false;// true if consent was obtained from the user, false if consent was not obtained from the user
-        AppLovinPrivacySettings.setHasUserConsent(userHasProvidedConsentForDataCollection, getApplicationContext());
-
-        AdColonyAppOptions appOptions = AdColonyMediationAdapter.getAppOptions();
-        appOptions.setGDPRConsentString("1");
-        appOptions.setGDPRRequired(true);
-
-        AdColony.configure(this,           // activity context
-                "app0c5f24e2a6fa46abb1",
-                "vza5fbba0f0486428ca2", "vz45785b98ca264fd1be"); // list of all your zones set up on the AdColony Dashboard
-
-        MobileAds.initialize(this, new OnInitializationCompleteListener() {
-            @Override
-            public void onInitializationComplete(InitializationStatus initializationStatus) {
-            }
-        });
-        mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build();
-        mAdView.loadAd(adRequest);
-
-        mAdView.setAdListener(new AdListener(){
-            @Override
-            public void onAdLoaded() {
-                Log.d("MA Banner Ad Test", "Add Finished Loading");
-            }
-
-            @Override
-            public void onAdFailedToLoad(int i) {
-                Log.d("MA Banner Ad Test", "Add Loading Failed");
-            }
-
-            @Override
-            public void onAdOpened() {
-                Log.d("MA Banner Ad Test", "Add is Visible Now");
-            }
-        });
-
-        //InterstitialAds
-        mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId("ca-app-pub-5973465911931412/4652201857");
-        mInterstitialAd.loadAd(new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build());
-        mInterstitialAd.setAdListener(new AdListener() {
-
-            @Override
-            public void onAdClosed() {
-                // Load the next interstitial.
-                mInterstitialAd.loadAd(new AdRequest.Builder().build());
-            }
-
-
-            @Override
-            public void onAdLoaded() {
-                Log.d("MA Interstitial Ad Test", "Add Finished Loading");
-            }
-
-            @Override
-            public void onAdFailedToLoad(int i) {
-                Log.d("MA Interstitial Ad Test", "Add Loading Failed");
-            }
-
-            @Override
-            public void onAdOpened() {
-                Log.d("MA Interstitial Ad Test", "Add is Visible Now");
-            }
-        });
-
         compositeDisposable.add(rxPermission.requestEach(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .subscribe(new Consumer<Permission>() {
                     @Override
@@ -227,6 +143,92 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
                         //  Toast.makeText(MainActivity.this, granted.toString(), Toast.LENGTH_LONG).show();
                     }
                 }));
+
+        MyTask myTask = new MyTask();
+        myTask.execute();
+//        MediationTestSuite.launch(MainActivity.this);
+//        MediationTestSuite.addTestDevice("5FD10B823D499740F54DDA97695D27FE");
+
+        getNotificationFirebase();
+
+        AppRate.with(this)
+                .setInstallDays(1) // default 10, 0 means install day.
+                .setLaunchTimes(3) // default 10
+                .setRemindInterval(2) // default 1
+                .setShowLaterButton(true) // default true
+                .setDebug(false) // default false
+                .setOnClickButtonListener(new OnClickButtonListener() { // callback listener.
+                    @Override
+                    public void onClickButton(int which) {
+                        Log.d(MainActivity.class.getName(), Integer.toString(which));
+                    }
+                })
+                .monitor();
+
+        // Show a dialog if meets conditions
+        AppRate.showRateDialogIfMeetsConditions(this);
+
+        fromBottom = AnimationUtils.loadAnimation(this, R.anim.from_bottom);
+        mainLogoImage = findViewById(R.id.mainLogoImage);
+        mainLogoImage.startAnimation(fromBottom);
+
+        UpdateHelper.with(this).onUpdateCheck(this).check();
+
+        AppLovinSdk.initializeSdk(getApplicationContext());
+
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+
+        mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+        mAdView.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                Log.d("MA Banner Ad Test", "Ad Finished Loading");
+            }
+
+            @Override
+            public void onAdFailedToLoad(int i) {
+                Log.d("MA Banner Ad Test", "Ad Loading Failed");
+            }
+
+            @Override
+            public void onAdOpened() {
+                Log.d("MA Banner Ad Test", "Ad is Visible Now");
+            }
+        });
+
+        //InterstitialAds
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId("ca-app-pub-5973465911931412/4652201857");
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        mInterstitialAd.setAdListener(new AdListener() {
+            //.addTestDevice("5FD10B823D499740F54DDA97695D27FE")
+            @Override
+            public void onAdClosed() {
+                // Load the next interstitial.
+                //mInterstitialAd.loadAd(new AdRequest.Builder().build());
+            }
+
+            @Override
+            public void onAdLoaded() {
+                Log.d("MA Interstitial Ad Test", "Ad Finished Loading");
+            }
+
+            @Override
+            public void onAdFailedToLoad(int i) {
+                Log.d("MA Interstitial Ad Test", "Ad Loading Failed");
+            }
+
+            @Override
+            public void onAdOpened() {
+                Log.d("MA Interstitial Ad Test", "Ad is Visible Now");
+            }
+        });
 
         if (getIntent().hasExtra("uPhone")) {
             uPhone = getIntent().getStringExtra("uPhone");
@@ -248,44 +250,94 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
         //INIT paper
         Paper.init(this);
 
+//        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+//        checkFirst = pref.getBoolean("first_start", true);
+//        editor = pref.edit();
 
-        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
-        checkFirst = pref.getBoolean("first_start",true);
-        editor = pref.edit();
+//        if (checkFirst != Boolean.FALSE) {
+//            TapTargetView.showFor(this,                 // `this` is an Activity
+//                    TapTarget.forView(findViewById(R.id.addProperty), "Add new item", "Click here to add new items you want to remember")
+//                            // All options below are optional
+//                            .outerCircleColor(R.color.primary)      // Specify a color for the outer circle
+//                            .outerCircleAlpha(0.96f)            // Specify the alpha amount for the outer circle
+//                            .targetCircleColor(R.color.white)   // Specify a color for the target circle
+//                            .titleTextSize(25)                  // Specify the size (in sp) of the title text
+//                            .titleTextColor(R.color.white)      // Specify the color of the title text
+//                            .descriptionTextSize(18)            // Specify the size (in sp) of the description text
+//                            .descriptionTextColor(R.color.white)  // Specify the color of the description text
+//                            .textColor(R.color.white)            // Specify a color for both the title and description text
+//                            .textTypeface(Typeface.SANS_SERIF)  // Specify a typeface for the text
+//                            .dimColor(R.color.black)            // If set, will dim behind the view with 30% opacity of the given color
+//                            .drawShadow(true)                   // Whether to draw a drop shadow or not
+//                            .cancelable(true)                  // Whether tapping outside the outer circle dismisses the view
+//                            .tintTarget(true)                   // Whether to tint the target view's color
+//                            .transparentTarget(true)           // Specify whether the target is transparent (displays the content underneath)
+//                            // Specify a custom drawable to draw as the target
+//                            .targetRadius(65),                  // Specify the target radius (in dp)
+//                    new TapTargetView.Listener() {          // The listener can listen for regular clicks, long clicks or cancels
+//                        @Override
+//                        public void onTargetClick(TapTargetView view) {
+//                            super.onTargetClick(view);      // This call is optional
+//                            showDialog();
+//                            view.dismiss(true);
+//                        }
+//                    });
+//            //editor.putBoolean("first_start", false).commit();
+//        }
+    }
 
-        if(checkFirst!=Boolean.FALSE){
-            TapTargetView.showFor(this,                 // `this` is an Activity
-                    TapTarget.forView(findViewById(R.id.addProperty), "Add new item", "Click here to add new items you want to remember")
-                            // All options below are optional
-                            .outerCircleColor(R.color.primary)      // Specify a color for the outer circle
-                            .outerCircleAlpha(0.96f)            // Specify the alpha amount for the outer circle
-                            .targetCircleColor(R.color.white)   // Specify a color for the target circle
-                            .titleTextSize(25)                  // Specify the size (in sp) of the title text
-                            .titleTextColor(R.color.white)      // Specify the color of the title text
-                            .descriptionTextSize(18)            // Specify the size (in sp) of the description text
-                            .descriptionTextColor(R.color.white)  // Specify the color of the description text
-                            .textColor(R.color.white)            // Specify a color for both the title and description text
-                            .textTypeface(Typeface.SANS_SERIF)  // Specify a typeface for the text
-                            .dimColor(R.color.black)            // If set, will dim behind the view with 30% opacity of the given color
-                            .drawShadow(true)                   // Whether to draw a drop shadow or not
-                            .cancelable(true)                  // Whether tapping outside the outer circle dismisses the view
-                            .tintTarget(true)                   // Whether to tint the target view's color
-                            .transparentTarget(true)           // Specify whether the target is transparent (displays the content underneath)
-                            // Specify a custom drawable to draw as the target
-                            .targetRadius(65),                  // Specify the target radius (in dp)
-                    new TapTargetView.Listener() {          // The listener can listen for regular clicks, long clicks or cancels
-                        @Override
-                        public void onTargetClick(TapTargetView view) {
-                            super.onTargetClick(view);      // This call is optional
-                            showDialog();
-                            view.dismiss(true);
-                        }
-                    });
-            //editor.putBoolean("first_start", false).commit();
+    private class MyTask extends AsyncTask<String, String, String> {
+        String resp;
+        Boolean checkFirst;
+        SharedPreferences.Editor editor;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
         }
 
+        @Override
+        protected String doInBackground(String... strings) {
+            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+            checkFirst = pref.getBoolean("first_start", true);
+            editor = pref.edit();
+            if (checkFirst != Boolean.FALSE) {
+                TapTargetView.showFor(MainActivity.this,                 // `this` is an Activity
+                        TapTarget.forView(findViewById(R.id.addProperty), "Add new item", "Click here to add new items you want to remember")
+                                // All options below are optional
+                                .outerCircleColor(R.color.primary)      // Specify a color for the outer circle
+                                .outerCircleAlpha(0.96f)            // Specify the alpha amount for the outer circle
+                                .targetCircleColor(R.color.white)   // Specify a color for the target circle
+                                .titleTextSize(25)                  // Specify the size (in sp) of the title text
+                                .titleTextColor(R.color.white)      // Specify the color of the title text
+                                .descriptionTextSize(18)            // Specify the size (in sp) of the description text
+                                .descriptionTextColor(R.color.white)  // Specify the color of the description text
+                                .textColor(R.color.white)            // Specify a color for both the title and description text
+                                .textTypeface(Typeface.SANS_SERIF)  // Specify a typeface for the text
+                                .dimColor(R.color.black)            // If set, will dim behind the view with 30% opacity of the given color
+                                .drawShadow(true)                   // Whether to draw a drop shadow or not
+                                .cancelable(true)                  // Whether tapping outside the outer circle dismisses the view
+                                .tintTarget(true)                   // Whether to tint the target view's color
+                                .transparentTarget(true)           // Specify whether the target is transparent (displays the content underneath)
+                                // Specify a custom drawable to draw as the target
+                                .targetRadius(65),                  // Specify the target radius (in dp)
+                        new TapTargetView.Listener() {          // The listener can listen for regular clicks, long clicks or cancels
+                            @Override
+                            public void onTargetClick(TapTargetView view) {
+                                super.onTargetClick(view);      // This call is optional
+                                showDialog();
+                                view.dismiss(true);
+                            }
+                        });
+                //editor.putBoolean("first_start", false).commit();
+            }
+            return resp;
+        }
 
-
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+        }
     }
 
     private void getNotificationFirebase() {
@@ -315,67 +367,11 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
     }
 
     public void showInterstitial() {
-        if(counter<2){
+        if (counter < 1) {
             mInterstitialAd.show();
             counter++;
-        }else {
-            Log.d("InterstitalAd", "The interstitial wasn't loaded yet.");
-        }
-    }
-
-//    @Override
-//    protected void onDestroy() {
-//        compositeDisposable.clear();
-//        //super.onDestroy();
-//    }
-
-    private void login(String phone, String pwd) {
-        if (Common.isConnectedToInternet(getBaseContext())) {
-            //save user& password
-
-            // TODO: Implement your own authentication logic here.
-
-            //Init Firebase
-
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            final DatabaseReference table_user = database.getReference("Users");
-
-            table_user.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-
-                    //check if user not exist in database
-                    if (dataSnapshot.child(phone).exists()) {
-                        //get user information
-                        //mDialog.dismiss();
-                        User user = dataSnapshot.child(phone).getValue(User.class);
-                        user.setuPhone(phone); //set phone
-
-                        if (user.getuPassword().equals(pwd)) {
-
-                            Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                            startActivity(intent);
-                            Common.currentUser = user;
-                            finish();
-
-                        } else {
-                            Toast.makeText(MainActivity.this, "Wrong Password !!!", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        //mDialog.dismiss();
-                        Toast.makeText(MainActivity.this, "User Does'nt exist..!!", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
-
         } else {
-            Toast.makeText(MainActivity.this, "Please check your connection !!", Toast.LENGTH_SHORT).show();
-            return;
+            Log.d("InterstitalAd", "The interstitial wasn't loaded yet.");
         }
     }
 
@@ -457,7 +453,6 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
                                         @Override
                                         public void onFinish() {
                                             //Toast.makeText(MainActivity.this, "Main View Add", Toast.LENGTH_SHORT).show();
-
                                             showInterstitial();
                                         }
                                     }.start();
@@ -480,6 +475,7 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
 
                         Intent settingIntent = new Intent(MainActivity.this, SettingsActivity.class);
                         startActivity(settingIntent);
+
 
                     } else if (finalI == 3) {
                         //delete remember user after logout
@@ -548,9 +544,7 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
 
-                //show ads
-                showInterstitial();
-                counter=0;
+                counter = 0;
                 Paper.book().destroy();
                 Intent logIn = new Intent(MainActivity.this, LoginActivity.class);
                 logIn.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -702,7 +696,7 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
         } else {
             Toast.makeText(this, "Please Click the image first..!!!", Toast.LENGTH_LONG).show();
         }
-        if(checkFirst!=Boolean.FALSE){
+        if (checkFirst != Boolean.FALSE) {
             TapTargetView.showFor(this,                 // `this` is an Activity
                     TapTarget.forView(findViewById(R.id.viewProperty), "View Items", "Click here to view items you added.")
                             // All options below are optional
@@ -778,7 +772,7 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
-                        intent.setData(Uri.parse("market://details?id=com.techyhacky.quotesadda"));
+                        intent.setData(Uri.parse(urlApp));
                         startActivity(intent);
                         //Toast.makeText(MainActivity.this, ""+urlApp, Toast.LENGTH_SHORT).show();
                     }
@@ -790,4 +784,6 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
                 }).create();
         alertDialog.show();
     }
+
+
 }

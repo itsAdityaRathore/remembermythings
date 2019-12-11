@@ -8,8 +8,8 @@ android {
         applicationId 'com.aditya.remembermythings'
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 5
-        versionName "1.0.3"
+        versionCode 8
+        versionName "1.0.6"
     }
     buildTypes {
         release {
@@ -24,6 +24,7 @@ android {
     }
 
 }
+
 
 
 dependencies {
@@ -68,19 +69,23 @@ dependencies {
     //admob
     implementation project(':NativeTemplatesAndroid-1.0.0')
     implementation 'com.google.android.gms:play-services-ads:18.3.0'
+    implementation 'com.google.android.ads:mediation-test-suite:1.2.1'
+
     //AdColony
     implementation 'com.google.ads.mediation:adcolony:4.1.0.0'
     //UnityAds
     implementation 'com.google.ads.mediation:unity:3.3.0.0'
-
     //lottieAnimaition
     implementation 'com.airbnb.android:lottie:3.2.2'
-
     //Applovinads
-    implementation 'com.google.ads.mediation:applovin:9.8.0.0'
+    implementation 'com.google.ads.mediation:applovin:9.9.1.2'
 
     //TapTarget
     implementation 'com.getkeepsafe.taptargetview:taptargetview:1.11.0'
+
+    implementation 'com.github.hotchemi:android-rate:1.0.1'
+
+
 
 }
 apply plugin: 'com.google.gms.google-services'

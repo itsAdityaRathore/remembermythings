@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -31,6 +32,7 @@ import com.aditya.remembermythings.Model.Items;
 import com.aditya.remembermythings.R;
 import com.aditya.remembermythings.ViewHolder.ItemClickListener;
 import com.aditya.remembermythings.ViewHolder.ItemViewHolder;
+import com.applovin.sdk.AppLovinSdk;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -69,8 +71,8 @@ import id.zelory.compressor.Compressor;
 public class ItemViewActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    InterstitialAd mInterstitialAd;
-    int counter = 1;
+    InterstitialAd iInterstitialAd;
+    int counter = 0;
 
     //TextView txtFullName;
     AppCompatImageView edtImage, viewFullImage;
@@ -83,7 +85,7 @@ public class ItemViewActivity extends AppCompatActivity
 
     File mediaStorageDir;
     Uri picUri, saveUri;
-    ;
+
     private static final int CAPTURE_IMAGE = 0;
 
     //Firebase
@@ -104,24 +106,35 @@ public class ItemViewActivity extends AppCompatActivity
     List<String> suggestList = new ArrayList<>();
     MaterialSearchBar materialSearchBar;
 
-    private AdView mAdView;
+    private AdView iAdView;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_item_view);
+
+        AppLovinSdk.initializeSdk(getApplicationContext());
+
+//        AdColonyAppOptions appOptions = AdColonyMediationAdapter.getAppOptions();
+//        appOptions.setGDPRConsentString("1");
+//        appOptions.setGDPRRequired(true);
+//
+//        AdColony.configure(this,           // activity context
+//                "app0c5f24e2a6fa46abb1",
+//                "vza5fbba0f0486428ca2", "vz45785b98ca264fd1be"); // list of all your zones set up on the AdColony Dashboard
 
         MobileAds.initialize(this, new OnInitializationCompleteListener() {
             @Override
             public void onInitializationComplete(InitializationStatus initializationStatus) {
             }
         });
-        mAdView = findViewById(R.id.adViewItemVIew);
-        AdRequest adRequest = new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build();
-        mAdView.loadAd(adRequest);
+        iAdView = findViewById(R.id.adViewItemVIew);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        iAdView.loadAd(adRequest);
 
-        mAdView.setAdListener(new AdListener(){
+        iAdView.setAdListener(new AdListener() {
             @Override
             public void onAdLoaded() {
                 Log.d("IV Banner Ad Test", "Add Finished Loading");
@@ -139,10 +152,10 @@ public class ItemViewActivity extends AppCompatActivity
         });
 
         //InterstitialAds
-        mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId("ca-app-pub-5973465911931412/9703635404");
-        mInterstitialAd.loadAd(new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build());
-        mInterstitialAd.setAdListener(new AdListener() {
+        iInterstitialAd = new InterstitialAd(this);
+        iInterstitialAd.setAdUnitId("ca-app-pub-5973465911931412/9703635404");
+        iInterstitialAd.loadAd(new AdRequest.Builder().build());
+        iInterstitialAd.setAdListener(new AdListener() {
             @Override
             public void onAdClosed() {
                 // Load the next interstitial.
@@ -256,7 +269,6 @@ public class ItemViewActivity extends AppCompatActivity
 
             }
         });
-
     }
 
 //    public void showInterstitial() {
@@ -576,7 +588,7 @@ public class ItemViewActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        int random = ThreadLocalRandom.current().nextInt(7, 10);
+        int random = ThreadLocalRandom.current().nextInt(20, 40);
         int newRandom = random * 1000;
         //Toast.makeText(ItemViewActivity.this, "Item View Add Back pressed", Toast.LENGTH_SHORT).show();
         new CountDownTimer(newRandom, 1000) {
@@ -597,9 +609,9 @@ public class ItemViewActivity extends AppCompatActivity
     }
 
     public void showInterstitial() {
-        if (mInterstitialAd.isLoaded()) {
-            if(counter<2){
-                mInterstitialAd.show();
+        if (iInterstitialAd.isLoaded()) {
+            if (counter < 1) {
+                iInterstitialAd.show();
                 counter++;
             }
 

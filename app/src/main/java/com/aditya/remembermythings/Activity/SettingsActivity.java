@@ -2,6 +2,7 @@ package com.aditya.remembermythings.Activity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
@@ -21,6 +22,7 @@ import androidx.core.content.ContextCompat;
 import com.aditya.remembermythings.Common.Common;
 import com.aditya.remembermythings.Model.User;
 import com.aditya.remembermythings.R;
+import com.applovin.sdk.AppLovinSdk;
 import com.google.android.ads.nativetemplates.NativeTemplateStyle;
 import com.google.android.ads.nativetemplates.TemplateView;
 import com.google.android.gms.ads.AdListener;
@@ -45,7 +47,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private static final String TAG = "SettingsActivity";
 
-    AdView mAdView;
+    AdView sAdView;
 
     @BindView(R.id.txtOldPass) EditText oldPassword;
     @BindView(R.id.txtNewPass) EditText newPassword;
@@ -58,19 +60,23 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_settings);
         ButterKnife.bind(this);
+
+
+        AppLovinSdk.initializeSdk(getApplicationContext());
 
         MobileAds.initialize(this, new OnInitializationCompleteListener() {
             @Override
             public void onInitializationComplete(InitializationStatus initializationStatus) {
             }
         });
-        mAdView = findViewById(R.id.adViewSettings);
-        AdRequest adRequest = new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build();
-        mAdView.loadAd(adRequest);
+        sAdView = findViewById(R.id.adViewSettings);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        sAdView.loadAd(adRequest);
 
-        mAdView.setAdListener(new AdListener(){
+        sAdView.setAdListener(new AdListener() {
             @Override
             public void onAdLoaded() {
                 Log.d("ST Banner Ad Test", "Add Finished Loading");
@@ -115,7 +121,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         ColorDrawable colorDrawable = new ColorDrawable(ContextCompat.getColor(this, R.color.white));
 
-        MobileAds.initialize(this, "ca-app-pub-5973465911931412~6787410607");
+
 //        AdLoader adLoader = new AdLoader.Builder(this, "ca-app-pub-5973465911931412/9836918220")
 //                .forUnifiedNativeAd(new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
 //                    @Override
@@ -159,7 +165,7 @@ public class SettingsActivity extends AppCompatActivity {
                         .build())
                 .build();
 
-        adLoader.loadAd(new AdRequest.Builder().addTestDevice("5FD10B823D499740F54DDA97695D27FE").build());
+        adLoader.loadAd(new AdRequest.Builder().build());
 
     }
 

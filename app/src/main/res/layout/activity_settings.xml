@@ -188,7 +188,7 @@
         android:layout_centerHorizontal="true"
         android:layout_gravity="center_horizontal|bottom"
         ads:adSize="SMART_BANNER"
-        ads:adUnitId="@string/BannerSetting">
+        ads:adUnitId="ca-app-pub-5973465911931412/9352281619">
 
     </com.google.android.gms.ads.AdView>
 

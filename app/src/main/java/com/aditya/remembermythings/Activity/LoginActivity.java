@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -54,6 +53,8 @@ public class LoginActivity extends AppCompatActivity {
     FirebaseDatabase database;
     DatabaseReference table_user;
 
+    String user, pwd;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -99,8 +100,8 @@ public class LoginActivity extends AppCompatActivity {
         });
 
 
-        String user = Paper.book().read(Common.USER_KEY);
-        String pwd = Paper.book().read(Common.PWD_KEY);
+        user = Paper.book().read(Common.USER_KEY);
+        pwd = Paper.book().read(Common.PWD_KEY);
         if (user != null && pwd != null) {
             if (!user.isEmpty() && !pwd.isEmpty()) {
                 loginAuto(user, pwd);
@@ -119,11 +120,6 @@ public class LoginActivity extends AppCompatActivity {
             progressDialog.setMessage("Logging in..");
             progressDialog.show();
 
-//            //Init Firebase
-//
-//            FirebaseDatabase database = FirebaseDatabase.getInstance();
-//            final DatabaseReference table_user = database.getReference("Users");
-
             table_user.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -137,16 +133,16 @@ public class LoginActivity extends AppCompatActivity {
 
                         if (user.getuPassword().equals(pwd)) {
 
+                            Common.currentUser = user;
                             Intent intent = new Intent(getBaseContext(), MainActivity.class);
                             intent.putExtra("uPhone", phone);
                             startActivity(intent);
-                            progressDialog.dismiss();
-                            Common.currentUser = user;
                             finish();
+                            //progressDialog.dismiss();
 
                         } else {
                             Toast.makeText(LoginActivity.this, "Wrong Password !!!", Toast.LENGTH_SHORT).show();
-                            progressDialog.dismiss();
+                            // progressDialog.dismiss();
                         }
                     } else {
                         //mDialog.dismiss();
@@ -250,22 +246,23 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void firstShow() {
-
-        Intent intent2 = new Intent(getApplicationContext(), FirstStartActivity.class);
-        startActivity(intent2);
-        finish();
-        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-
-        SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean("first_start", false);
-        editor.apply();
-    }
+//    private void firstShow() {
+//
+//        Intent intent2 = new Intent(getApplicationContext(), FirstStartActivity.class);
+//        startActivity(intent2);
+//        finish();
+//        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+//
+//        SharedPreferences prefs = getSharedPreferences("prefs", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = prefs.edit();
+//        editor.putBoolean("first_start", false);
+//        editor.apply();
+//    }
 
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_SIGNUP) {
             if (resultCode == RESULT_OK) {
 
@@ -339,7 +336,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 //Check if user is available
-                if (edtPhone.getText() != null || inputPassword.getText() != null){
+                if (edtPhone.getText() != null || inputPassword.getText() != null) {
                     table_user.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {

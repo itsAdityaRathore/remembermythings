@@ -11,11 +11,18 @@
     <string name="InterstitialItemView">ca-app-pub-5973465911931412/9703635404</string>
     <string name="NativeSetting">ca-app-pub-5973465911931412/8599610756</string>
 
-   <!-- <string name="BannerMain">ca-app-pub-3940256099942544/6300978111</string>
-    <string name="BannerInst">ca-app-pub-3940256099942544/6300978111</string>
-    <string name="BannerSetting">ca-app-pub-3940256099942544/6300978111</string>
-    <string name="InterstitialMain">ca-app-pub-3940256099942544/1033173712</string>
-    <string name="InterstitialItemView">ca-app-pub-3940256099942544/1033173712</string>
-    <string name="NativeSetting">ca-app-pub-3940256099942544/2247696110</string>
--->
+
+    <string name="rate_dialog_title">Rate this app</string>
+    <string name="rate_dialog_message">If you enjoy using this app, would you mind taking a moment to rate it? It won\'t take more than a minute. Thanks for your support!</string>
+    <string name="rate_dialog_ok">Rate It Now</string>
+    <string name="rate_dialog_cancel">Remind Me Later</string>
+    <string name="rate_dialog_no">No, Thanks</string>
+
+    <!-- <string name="BannerMain">ca-app-pub-3940256099942544/6300978111</string>
+     <string name="BannerInst">ca-app-pub-3940256099942544/6300978111</string>
+     <string name="BannerSetting">ca-app-pub-3940256099942544/6300978111</string>
+     <string name="InterstitialMain">ca-app-pub-3940256099942544/1033173712</string>
+     <string name="InterstitialItemView">ca-app-pub-3940256099942544/1033173712</string>
+     <string name="NativeSetting">ca-app-pub-3940256099942544/2247696110</string>
+ -->
 </resources>
