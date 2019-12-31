@@ -8,7 +8,6 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -131,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         setContentView(R.layout.activity_main);
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
@@ -250,9 +249,9 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
         //INIT paper
         Paper.init(this);
 
-//        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
-//        checkFirst = pref.getBoolean("first_start", true);
-//        editor = pref.edit();
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        checkFirst = pref.getBoolean("first_start", true);
+        editor = pref.edit();
 
 //        if (checkFirst != Boolean.FALSE) {
 //            TapTargetView.showFor(this,                 // `this` is an Activity
@@ -653,7 +652,7 @@ public class MainActivity extends AppCompatActivity implements UpdateHelper.OnUp
                 }
 
 
-                final StorageReference imageFolder = storageReference.child("images/").child(uri.getLastPathSegment());
+                final StorageReference imageFolder = storageReference.child("images/").child(uPhone + "_" + uri.getLastPathSegment());
 
                 UploadTask uploadTask = imageFolder.putBytes(final_image);
 

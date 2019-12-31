@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -93,6 +92,7 @@ public class ItemViewActivity extends AppCompatActivity
     DatabaseReference items, userItem;
     FirebaseStorage storage;
     StorageReference storageReference;
+
     FirebaseRecyclerAdapter<Items, ItemViewHolder> adapter;
 
     MenuItem myItem;
@@ -112,7 +112,7 @@ public class ItemViewActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         setContentView(R.layout.activity_item_view);
 
         AppLovinSdk.initializeSdk(getApplicationContext());
@@ -324,7 +324,6 @@ public class ItemViewActivity extends AppCompatActivity
                 });
     }
 
-
     private void loadMenuNew() {
 
         adapter = new FirebaseRecyclerAdapter<Items, ItemViewHolder>(
@@ -372,6 +371,7 @@ public class ItemViewActivity extends AppCompatActivity
     public boolean onContextItemSelected(MenuItem item) {
         myItem = item;
 
+
         if (item.getTitle().equals(Common.UPDATE)) {
             showUpdateFoodDialog(adapter.getRef(item.getOrder()).getKey(), adapter.getItem(item.getOrder()));
         } else if (item.getTitle().equals(Common.DELETE)) {
@@ -382,6 +382,47 @@ public class ItemViewActivity extends AppCompatActivity
     }
 
     private void deleteFood(String key) {
+        final String[] delURL = new String[1];
+
+        items.child(key).child("image").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                try {
+                    if (dataSnapshot.getValue() != null) {
+                        try {
+                            Log.e("TAG", "" + dataSnapshot.getValue()); // your name values you will get here
+                            delURL[0] = (String) dataSnapshot.getValue();
+                            StorageReference photoRef = storage.getReferenceFromUrl(delURL[0]);
+                            photoRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    // File deleted successfully
+                                    //Toast.makeText(ItemViewActivity.this, "File deleted successfully", Toast.LENGTH_SHORT).show();
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Uh-oh, an error occurred!
+                                    //Toast.makeText(ItemViewActivity.this, "Uh-oh, an error occurred!", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        Log.e("TAG", " it's null.");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
         items.child(key).removeValue();
     }
 
@@ -509,7 +550,7 @@ public class ItemViewActivity extends AppCompatActivity
                 }
 
 
-                final StorageReference imageFolder = storageReference.child("images/").child(uri.getLastPathSegment());
+                final StorageReference imageFolder = storageReference.child("images/").child(Common.currentUser.getuPhone() + "_" + uri.getLastPathSegment());
 
                 UploadTask uploadTask = imageFolder.putBytes(final_image);
 
@@ -529,11 +570,9 @@ public class ItemViewActivity extends AppCompatActivity
                                 //we create new category
                                 if (newItem != null) {
                                     items.push().setValue(newItem);
-                                    deleteFood(adapter.getRef(myItem.getOrder()).getKey());
+                                    // deleteFood(adapter.getRef(myItem.getOrder()).getKey());
                                     actualImage.delete();
                                     Snackbar.make(findViewById(R.id.itemview), "New Item " + newItem.getName() + " was added", Snackbar.LENGTH_SHORT).show();
-
-
                                 }
                             }
                         });

@@ -8,8 +8,10 @@ android {
         applicationId 'com.aditya.remembermythings'
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 8
-        versionName "1.0.6"
+        versionCode 9
+        versionName "1.0.7"
+        ndk.abiFilters 'armeabi-v7a','arm64-v8a','x86','x86_64'
+
     }
     buildTypes {
         release {
